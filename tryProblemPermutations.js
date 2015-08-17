@@ -9,12 +9,12 @@
 // HELPER FUNCTIONS
 
 /*
-* Retruns an array of all pessible permutations of binary arrays of length "size"
+* Return an array of all pessible permutations of binary arrays of length "size"
 * For instance, for size = 2, returns [[0,0],[0,1],[1,0],[1,1]]
 */
 function getPermutations(size) {
   if (size == 1) {
-    return [[0], [1]];
+    return [[1], [0]];
   }
 
   var result = [];
@@ -35,59 +35,55 @@ function getPermutations(size) {
 }
 
 /* Click all check checkboxes corresponding to 1's in the given 'permutation' (an array of 1's and 0's) */
-function clickStuff(permutation) {
+function clickBoxes(permutation) {
+  console.log("Clicking " + permutation)
   for (var i = 0; i < permutation.length; i++) {
     if (permutation[i] == 1) {
-      $("#" + checkboxes[i]).click();
+      $("#input_i4x-Engineering-Networking-SP-problem-c32e8e8839bb4910bfb74ddea1a340ed_2_1_choice_" + i).click();
     }   
   }
 }
 
-/* Click all checkboxes corresponding to the given 'permutation' after 4000*i milliseconds */
-function click(permutation, i) {
-  setTimeout(function() {
-    console.log("about to click " + permutation);
-    clickStuff(permutation);
-  }, 4000*i);
+/* Look at the answer object to see if the last answer (assumed to be 'permutation') was correct, alert if so */
+function checkAnswer(permutation) {
+  console.log("Checking answer")
+  var statusObj = $("#status_i4x-Engineering-Networking-SP-problem-c32e8e8839bb4910bfb74ddea1a340ed_2_1")
+  if (statusObj.attr('class')  == "status correct") {
+    alert("BOOMSLAM it's " + permutation);
+    console.log("It was " + permutation);
+  }
 }
 
-/*
-* After 3500 + 4000*i milliseconds, check if the previous click was the right answer. If not,
-* un-check all checkboxes corresponding to the given 'permutation'
-*/
-function unclick(permutation, i) {
-  setTimeout(function() {
-    var status = $("#status_i4x-Engineering-Networking-SP-problem-c32e8e8839bb4910bfb74ddea1a340ed_2_1").attr('class') 
-    if (status == "status correct") {
-      alert("BOOMSLAM it's " + permutation);
-      console.log("Its was " + permutation);
-    }
-    console.log("about to unclick " + permutation);
-    clickStuff(permutation);
-  }, 3500 + 4000*i);
-}
-
-/* After 500 + 4000*i) seconds, click the "Submit" button to submit the answer */
-function submit(i) {
-  setTimeout(function() {
-    $("button.Submit")[4].click();
-  }, 500 + 4000*i);
-}
+/* Click the "submit" button */
+var submitFn = function() {
+  $("button.Submit")[4].click();
+};
 
 
 // SCRIPT CONTENTS
 
-var checkboxes = []
-for (var i = 0; i < 7; i++) {
-  checkboxes.push("input_i4x-Engineering-Networking-SP-problem-c32e8e8839bb4910bfb74ddea1a340ed_2_1_choice_" + i);
-}
-
 var permutations = getPermutations(7);
 
+// Go through each permutation, click the corresponding boxes, submit the answer,
+// and wait to see if it was correct. Make sure to wait a while for the server to respond
+for (var i = 0; i < permutations.length; i++) {
+  var permutation = permutations[i];
+  
+  var clickFn = (function(perm) {
+    return function() {
+      clickBoxes(perm);
+    }
+  })(permutation);
 
-for (var i = 0; i < 128; i++) {
-  var perm = permutations[i];
-  click(perm, i);
-  submit(i);
-  unclick(perm, i);
+  var checkAnswerFn = (function(perm) {
+    return function() {
+      checkAnswer(perm);
+    }
+  })(permutation);
+
+  var WAIT_TIME = 2000;
+  setTimeout(clickFn, WAIT_TIME * i);
+  setTimeout(submitFn, WAIT_TIME * i + WAIT_TIME / 10);
+  setTimeout(checkAnswerFn, WAIT_TIME * i + WAIT_TIME * (8 / 10));
+  setTimeout(clickFn, WAIT_TIME * i + WAIT_TIME * (9 / 10));
 }
