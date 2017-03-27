@@ -81,7 +81,7 @@ for (var i = 0; i < permutations.length; i++) {
     }
   })(permutation);
 
-  var WAIT_TIME = 2000;
+  var WAIT_TIME = 3000;
   setTimeout(clickFn, WAIT_TIME * i);
   setTimeout(submitFn, WAIT_TIME * i + WAIT_TIME / 10);
   setTimeout(checkAnswerFn, WAIT_TIME * i + WAIT_TIME * (8 / 10));
