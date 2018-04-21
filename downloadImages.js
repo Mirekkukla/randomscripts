@@ -47,10 +47,10 @@ var docInfo = {id: 81822, numberOfPages: 6}
 
 var tempLink = document.createElement("a");
 for (var i = 1; i <= docInfo.numberOfPages; i++) {
-    var url = "https://addepar.secondmarket.com/document_view/" + docInfo.id + "/view?file=" + docInfo.id + "_" + i + ".png";
+    var url = `https://addepar.secondmarket.com/document_view/${docInfo.id}/view?file=${docInfo.id}_${i}.png`;
     tempLink.setAttribute('href', url);
     tempLink.setAttribute('download', ''); // download the image instead of just loading it in the browser
-    // each download needs to happen in its own tab, otherwise only the most recently request one will go through
+    // each download needs to happen in its own tab, otherwise only the most recent download request will go through
     tempLink.setAttribute('target', '_blank');
     console.log("about to download file from " + fileInfo.url);
     tempLink.click();
