@@ -1,14 +1,35 @@
 
 import webbrowser
+import argparse
 
 def main():
     # pull default airports from command line
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', action='store', help='from airport(s), ex: "PRG,VIE"')
+    parser.add_argument('-t', action='store', help='to airport(s), ex: "PRG,VIE"')
+    parser.add_argument('-d', action='store', help='departure_date, ex: "2018-09-13"')
+    args = parser.parse_args()
+    
 
-    from_airports = raw_input('from airport(s), ex: "PRG,VIE"')
     # validate airports
-    to_airports = raw_input('to airport(s), ex: "PRG,VIE"')
-    departure_date = raw_input('departure_date, ex: "2018-09-13"')
-    # validate date
+    from_airports = None
+    if args.f:
+        from_airports = args.f
+    else:
+        from_airports = raw_input('from airport(s), ex: "PRG,VIE": ')
+
+    to_airports = None
+    if args.t:
+        to_airports = args.t
+    else:
+        to_airports = to_airports = raw_input('to airport(s), ex: "PRG,VIE": ')
+
+    #validate date
+    departure_date = None
+    if args.d:
+        departure_date = args.d
+    else:
+        departure_date = raw_input('departure_date, ex: "2018-09-13": ')
 
     base_url = 'https://www.google.com/flights#flt='
     
