@@ -16,7 +16,7 @@ lines ="""-ATM Entebbe   $ 213.21 (Suzy 1/2)
 cash last day at Cairo $ 27.90 (all Suzy)
 """
 
-for line in iter(lines.splitlines()):
+for line in lines.splitlines():
     exp = r'[^$]+\$[ ]*([0-9\.]*)[ ]*(\(.*)'
     # print line
     regex_result = re.match(exp, line)
