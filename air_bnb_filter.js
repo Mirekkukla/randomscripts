@@ -26,14 +26,10 @@ function getOuterDiv(totalAmountNode) {
 
 var maxTotalAllowed = 180;
 
-// Searching for the intersection fo "$" and "total"  returns both the containers with
-// the total (where text is e.g. '$208total'), as well as the parent container with the
-// nightly price (e.g. 'Price$42/night$208total'); filter down to filter down to just the former
-var candidateLeafNodes = $("span:contains($):contains(total)").filter(function() {
-    return !$(this).text().includes("Price");
-});
-
-// cleaber way to do the same thing
+// Searching for the intersection fo "$" and "total"  returns two kinds of containers:
+// - those with the total (where text is e.g. '$208total')
+// - the parent container with the nightly price (e.g. 'Price$42/night$208total')
+// We want to make sure we only get the former
 var candidateLeafNodes = $("span:contains($):contains(total):not(:contains(Price))");
 
 candidateLeafNodes.each(function(i, candidateLeaf) {
