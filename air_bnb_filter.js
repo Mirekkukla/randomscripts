@@ -25,15 +25,22 @@ function getOuterDiv(totalAmountNode) {
 }
 
 var maxTotalAllowed = 180;
-var CLASS_OF_DIV_WITH_TOTAL = "._17oldnte";
-var candidateLeafNodes = $(CLASS_OF_DIV_WITH_TOTAL); // TODO: this gets changed... each relelase??
+// var CLASS_OF_DIV_WITH_TOTAL = "._17oldnte";
+// var candidateLeafNodes = $(CLASS_OF_DIV_WITH_TOTAL); // TODO: this gets changed... each relelase??
+
+// search for the intersection fo "$" and "total" returns both the containers with the total (where text is e.g. '$208total')
+// as well as the parent container with the nightly price (where text is e.g. 'Price$42/night$208total')
+// thus we filter odwn to filter down to just the former
+var candidateLeafNodes = $("span:contains($) span:contains(total)").filter(function() {
+    return !$(this).text().includes("Price");
+});
 
 candidateLeafNodes.each(function(i, candidateLeaf) {
-
     if (candidateLeaf.children.length === 0) {
         return;
     }
 
+    // Should no longer need but lets be safe
     var text = candidateLeaf.textContent;
     if (!text.includes("$")) {
         return;
