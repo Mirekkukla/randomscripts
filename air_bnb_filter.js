@@ -60,6 +60,7 @@ function main() {
     var maxTotalAllowed = parseInt(maxTotalAllowedStr, 10);
     console.log("Filtering all listings with a total over " + maxTotalAllowed);
 
+    var numHidden = 0;
     leafNodes.each(function(i, leafNode) {
 
         // As explained above, leaf string can be either e.g. "$215total" or "Price$215 total"
@@ -79,8 +80,8 @@ function main() {
                 return;
             }
 
-            console.log("About to hide %o", outerDivNode);
-            console.log("Amount is " + listingTotal);
+            console.log("About to hide %o with amount %s", outerDivNode, listingTotal);
+            numHidden++;
 
             // WONT WORK due to !important
             // $(outerDivNode).find("*").hide();
@@ -90,6 +91,7 @@ function main() {
             // $(outerDivNode).find("*").attr("style", "display: none !important");
         }
     });
+    console.log("Hid %s listings", numHidden);
 }
 
 
