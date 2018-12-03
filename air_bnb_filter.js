@@ -11,9 +11,6 @@ document.getElementsByTagName('head')[0].appendChild(script);
 // For now, relying on the hard-coded class name might be less fragile than trying to exract it
 var OUTER_DIV_CLASS_NAME = "_fhph4u";
 
-// TODO: ask use in popup
-var maxTotalAllowed = 80;
-
 ////////////// BULK OF SCRIPT ////////////////////
 
 function main() {
@@ -28,10 +25,10 @@ function main() {
     // - In one, the 'total' string gets its own container
     // - In another, the total amount gets its own container, and sits next to an invisible "price" container
     // This results in a different text rendering, e.g. "$215total" vs "Price$215 total"
+    //
+    // Fortunately all intermediate elements have more than one child, though this is likely a fragile check
     var candidateLeafNodes = $("span:contains($):contains(total)");
     var leafNodes = candidateLeafNodes.filter(function(i, node) {
-
-        // all intermediate elements have more than one child
         if (node.childElementCount != 1) {
             return false;
         }
@@ -53,6 +50,15 @@ function main() {
         console.warn("Number of leaf nodes (%s) doesn't match listings in summary (%s)",
             leafNodes.length, numListingsInSummary);
     }
+
+    var maxTotalAllowedStr = prompt("Max allowed total:");
+    if (!/^[0-9]+$/.test(maxTotalAllowedStr)) {
+        alert("Doesn't look like you entered an integer ('" + maxTotalAllowedStr + "'), quiting");
+        return;
+    }
+
+    var maxTotalAllowed = parseInt(maxTotalAllowedStr, 10);
+    console.log("Filtering all listings with a total over " + maxTotalAllowed);
 
     leafNodes.each(function(i, leafNode) {
 
