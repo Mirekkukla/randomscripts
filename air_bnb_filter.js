@@ -87,8 +87,8 @@ function main() {
             // $(outerDivNode).find("*").hide();
             // $(outerDivNode).hide();
 
-            // $(outerDivNode).attr("style", "display: none !important");
-            // $(outerDivNode).find("*").attr("style", "display: none !important");
+            $(outerDivNode).attr("style", "display: none !important");
+            $(outerDivNode).find("*").attr("style", "display: none !important");
         }
     });
     console.log("Hid %s listings", numHidden);
