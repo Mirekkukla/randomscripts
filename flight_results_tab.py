@@ -15,36 +15,11 @@ Example:
 python flight_results_tab.py -f "PRG,VIE" -t "SFO,SJC" -d "2018-09-13"
 """
 def main():
-    # pull default airports from command line
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', action='store', help='from airport(s), ex: "PRG,VIE"')
-    parser.add_argument('-t', action='store', help='to airport(s), ex: "SFO,SJC"')
-    parser.add_argument('-d', action='store', help='departure_date, ex: "2018-09-13"')
-    args = parser.parse_args()
-    
 
-    # validate airports
-    from_airports = None
-    if args.f:
-        from_airports = args.f
-    else:
-        from_airports = raw_input('from airport(s), ex: "PRG,VIE": ')
-
-    to_airports = None
-    if args.t:
-        to_airports = args.t
-    else:
-        to_airports = to_airports = raw_input('to airport(s), ex: "PRG,VIE": ')
-
-    #validate date
-    departure_date = None
-    if args.d:
-        departure_date = args.d
-    else:
-        departure_date = raw_input('departure_date, ex: "2018-09-13": ')
+    [from_airports, to_airports, departure_date] = get_flight_params()
 
     base_url = 'https://www.google.com/flights#flt='
-    
+
     currency_param = ';c:USD'
     mystery_params = ';e:1;sd:1;t:f'
     one_way_pamams = ';tt:o'
@@ -54,6 +29,25 @@ def main():
     # EX: https://www.google.com/flights#flt=PRG,VIE.JRO.2018-09-28;c:USD;e:1;sd:1;t:f;tt:o
 
     webbrowser.open(full_url)
+
+def get_flight_params():
+    """
+    Get "from airport(s)", "to airport(s)", and "departure date" info,
+    either as command-line arguments or from a command-line prompt.
+    Return an array of strings: [from_airports, to_airports, departure_date]
+    Note that this method does NOT do any kind of format validation.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', action='store', help='from airport(s), ex: "PRG,VIE"')
+    parser.add_argument('-t', action='store', help='to airport(s), ex: "SFO,SJC"')
+    parser.add_argument('-d', action='store', help='departure_date, ex: "2018-09-13"')
+    args = parser.parse_args()
+
+    from_airports = args.f if args.f else raw_input('from airport(s), ex: "PRG,VIE": ')
+    to_airports = args.t if args.t else raw_input('to airport(s), ex: "PRG,VIE": ')
+    departure_date = args.d if args.d else raw_input('departure_date, ex: "2018-09-13": ')
+
+    return [from_airports, to_airports, departure_date]
 
 if __name__ == "__main__":
     main()
