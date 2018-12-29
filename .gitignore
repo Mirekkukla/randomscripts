@@ -1,2 +1,3 @@
 words.txt
 usage_counts.txt
+*.pyc
