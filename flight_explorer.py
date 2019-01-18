@@ -1,5 +1,5 @@
 """
-Script to help you find cheap stopover destination between two fixed dates / cities.
+Script to help you find a cheap stopover destination between two fixed dates / cities.
 
 Example usage:
 python flight_explorer.py -f "LAX" -t "PRG" -d "2019-01-13" -a "2019-01-18"
