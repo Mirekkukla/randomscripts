@@ -1,0 +1,56 @@
+<style>
+.sidebysideimages { display: flex; width: 100%} 
+.sidebysideimages img { width: 100%; }
+.sidebysideimages .left { flex:1; } 
+.sidebysideimages .right { flex:1; padding-left:5px; }
+
+.wideandtall { display: flex; width: 100%} 
+.wideandtall img { width: 100%; }
+.wideandtall .wide { flex:1; padding-right:5px; } 
+.wideandtall .mattwide { flex:1.335; padding-right:5px; } 
+.wideandtall .tall { flex:.5626; padding-right:5px; }
+    
+/* When one pic is a normal wide and the other a snapchat tall */ 
+.wideandtall .snaptall { flex:.422; padding-right:5px; }
+
+/* When the wide "pic" is an embedded video
+   The sidebyside needs buffering on both sides since you don't
+   know if it next to is a "left" or a "right" (so its extra buffered
+   if its the first element in the dix)
+   TODO: make ALL images half-buffered on each side */
+.wideandtall .videowide { flex:1.2; padding-right:5px; }
+.sidebysideimages .videoleft { flex:1.2; width: 100%}
+.sidebysideimages .videoright { flex:1.2; width: 100%; padding-left:5px; }
+
+/* Place iframes in a div that maintains the aspect ratio */
+.video {
+  position: relative;
+  height: 0;
+  width: 100%; 
+  padding-bottom: 62.5%;
+}
+
+.video iframe {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+    
+/* When one pic is above the other with no text in between
+    and you don't want a really big space in between */
+.borderbelow { padding-bottom:5px; }
+    
+/* Force images to be width of text.
+   Might be bad for non-retina displays!
+   Also, reduce the whitespace between images and text. */
+.post-full-content img { max-width: 840px; margin-top: 0px; margin-bottom: 0px}
+
+/* The 'subscribe' and 'about the author' sections at the bottom
+   get waaay to big on wide screens (they're screen-size-relative).
+   Just fix them at a size that looks good. */
+.subscribe-form { padding-top: 50px }
+.subscribe-form { padding-bottom: 50px }
+.post-full-footer { padding-top: 20px }
+.post-full-footer { padding-bottom: 40px }
+    
+</style>
