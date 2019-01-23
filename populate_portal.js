@@ -1,4 +1,5 @@
 { // block scope so we can use "const" and re-run snippet
+"use strict";
 const NAME = "Bobdole";
 const EMAIL = "BobDole123@gmail.com";
 
