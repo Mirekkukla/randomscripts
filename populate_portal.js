@@ -1,5 +1,6 @@
-var NAME = "Bobdole";
-var EMAIL = "BobDole123@gmail.com";
+{ // block scope so we can use "const" and re-run snippet
+const NAME = "Bobdole";
+const EMAIL = "BobDole123@gmail.com";
 
 /**
  * Populate all input boxes that look name-related with a fake name, and similarly
@@ -10,8 +11,8 @@ var EMAIL = "BobDole123@gmail.com";
  */
 $("input").each(function(i, node) {
 
-    for (var attrName of node.getAttributeNames()) {
-        var attrVal = node.getAttribute(attrName);
+    for (let attrName of node.getAttributeNames()) {
+        let attrVal = node.getAttribute(attrName);
 
         if (node.type === "checkbox" && /accept/i.test(attrVal)) {
             console.log("Checkbox match on attr=" + attrName + " value=" + attrVal); 
@@ -35,3 +36,4 @@ $("input").each(function(i, node) {
         }
     }
 });
+}
