@@ -1,6 +1,6 @@
 """
-Copy and paste the entire contents of chase statmement pdf
-Extract only those lines that represent transactions and export to new file
+Copy and paste the entire contents of chase statmement pdf.
+Extract only those lines that represent transactions and export to tsv new file.
 
 Exacmple of lines we want to extract:
 10/05 AUTOMATIC PAYMENT - THANK YOU -3,826.72
@@ -29,10 +29,18 @@ def main():
 
     base_folder = "/Users/mirek/temp/"
     filepath_to_read = os.path.abspath(base_folder + "mirek_2018_raw.txt")
-    filepath_to_write = os.path.abspath(base_folder + "mirek_2018_tx.csv")
+    filepath_to_write = os.path.abspath(base_folder + "mirek_2018_tx.tsv")
 
+    matches = extract_tx_lines(filepath_to_read)
+    print "\n".join(matches)
+
+    tab_delimited_matches = cleanup_matches(matches)
+    write_to_file(tab_delimited_matches, filepath_to_write)
+
+
+def extract_tx_lines(file_to_read):
     lines = None
-    with open(filepath_to_read, "r") as f_read:
+    with open(file_to_read, "r") as f_read:
         lines = f_read.read().splitlines()
 
     matches = []
@@ -42,13 +50,30 @@ def main():
             print line
             matches.append(line)
 
-    print "\n".join(matches)
+    return matches
 
-    with open(filepath_to_write, "w") as f_write:
+
+def cleanup_matches(matches):
+    clean_lines = []
+    for line in matches:
+        split_on_space = line.split(" ")
+        date = split_on_space[0]
+        desc = " ".join(split_on_space[1:-1])
+        amt = split_on_space[-1]
+
+        clean_line = "{}\t{}\t{}".format(date, desc, amt)
+        clean_lines.append(clean_line)
+
+    return clean_lines
+
+
+def write_to_file(matches, file_to_write):
+    with open(file_to_write, "w") as f_write:
         for tx_line in matches:
             f_write.write(tx_line + "\n")
 
-    print "Wrote {} tx to '{}'".format(len(matches), filepath_to_write)
+    print "Wrote {} tx to '{}'".format(len(matches), file_to_write)
+
 
 if __name__ == '__main__':
     main()
