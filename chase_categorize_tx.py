@@ -20,13 +20,17 @@ def main():
     with open(filepath_to_read) as f_read:
         lines = f_read.read().splitlines()
 
+    # count how many times each description occurs
+    desc_count = {}
 
     for line in lines:
 
-        if "brew" in line.lower():
+        alcohol_terms = ["brew", "liquor", "beer"]
+        if substring_match(line, alcohol_terms):
             continue
 
-        if "uber" in line.lower():
+        travel_terms = ["uber", "limebike"]
+        if substring_match(line, travel_terms):
             continue
 
         coffee_terms = ["coffee", "costa", "starbucks", "philz", "java"]
@@ -37,22 +41,44 @@ def main():
         if substring_match(line, food_terms):
             continue
 
-        if "" in line.lower():
+        if substring_match(line, [""]):
             print line
 
-        # continue
 
+        # continue
         # print line
+
+
+
+        desc = line.split("\t")[1]
+        if desc not in desc_count:
+            desc_count[desc] = 0
+        desc_count[desc] += 1
+
+    print_description_count(desc_count)
+
 
 def substring_match(line_str, candidate_substrings):
     """
     Return true iff one of the strings in the `candidate_substrings` array is
     a subtring of `line_str`. Matches are considered on a case-insensitive basis
     """
-    expr = ".*({}).*".format("|".join(candidate_substrings).lower())
-    if re.match(expr, line_str.lower()):
+    if not isinstance(candidate_substrings, list):
+        print "Didn't pass an array"
+        exit(0)
+
+    expr = ".*({}).*".format("|".join(candidate_substrings))
+    # note that it'd be more efficient to use re.compile() to compile each regex
+    # once outside of line loop (tho this is _plenty_ fast for our purposes)
+    if re.match(expr.lower(), line_str.lower()):
         return True
     return False
+
+def print_description_count(desc_count):
+    for desc, count in sorted(desc_count.iteritems(), key=lambda (k, v): v):
+        if count >= 3:
+            print "{}: {}".format(desc, count)
+
 
 if __name__ == "__main__":
     main()
