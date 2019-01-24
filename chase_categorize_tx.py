@@ -32,18 +32,21 @@ def main():
 
     flight_terms = ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"]
     train_terms = ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"]
-    car_metro_terms = ["uber", "limebike", "LYFT",  "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON"]
+    car_metro_terms = ["uber", "limebike", "LYFT", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT",
+                       "76 -", "fuel", "HUB", "CHEVRON", "SHELL"]
     housing_terms = ["AIRBNB", "hotel"]
     activity_terms = ["VIATOR"]
 
-    coffee_terms = ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN"]
+    coffee_terms = ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN",
+                    "COFFE"]
     restaurant_terms = ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
                         "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
-                        "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house"]
+                        "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
+                        "PHO", "pizz", "REST", "TAVERN"]
     alcohol_terms = ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
                      "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
-                     "BODPOD", "VINEYARD"]
-    grocery_terms = ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE"]
+                     "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"]
+    grocery_terms = ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"]
 
     books_games_gifts_terms = ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"]
     clothes_hair_spa_terms = ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"]
