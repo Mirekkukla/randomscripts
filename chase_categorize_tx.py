@@ -33,22 +33,28 @@ def main():
         if substring_match(line, ["AUTOMATIC PAYMENT"]):
             continue
 
-        alcohol_terms = ["brew", "liquor", "beer", "PUBLIC HO"]
-        commute_terms = ["uber", "limebike", "WWW.CD.CZ", "BIRD", "PARKING KITTY"]
-        coffee_terms = ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's"]
-        restaurant_terms = ["restaur", "sushi", "BILA VRANA", "pizza", "grill"]
+        # terms with spaces are deliberate so as to minimize false positives
+
+        flight_terms = ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS"]
+        commute_terms = ["uber", "limebike", "LYFT", "WWW.CD.CZ", "BIRD", "PARKING KITTY", "LE.CZ", "MTA", "CALTRAIN", "CITY OF PORTLAND DEPT", "76 -", "fuel"]
         housing_terms = ["AIRBNB", "hotel"]
-        grocery_terms = ["Billa", "ALBERT", "market", "SAFEWAY"]
-        books_games_gifts_terms = ["AMAZON", "POWELL"]
-        vpn_spotify_website_terms = ["AVNGATE", "Spotify", "GHOST"]
+        activity_terms = ["VIATOR"]
+
+        coffee_terms = ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's"]
+        restaurant_terms = ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ", "taco"]
+        alcohol_terms = ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops", "BOTTLE"]
+        grocery_terms = ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY"]
+
+        books_games_gifts_movies_terms = ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "FLORA"]
+        vpn_spotify_website_phone_terms = ["AVNGATE", "Spotify", "GHOST", "google"]
 
         if substring_match(line, alcohol_terms + commute_terms + coffee_terms +
                            restaurant_terms + housing_terms + grocery_terms +
-                           books_games_gifts_terms + vpn_spotify_website_terms):
+                           books_games_gifts_movies_terms + vpn_spotify_website_phone_terms +
+                           activity_terms + flight_terms):
             continue
 
-
-        if substring_match(line, [""]):
+        if substring_match(line, ["FOODS"]):
             print line
 
         desc = line.split("\t")[1]
