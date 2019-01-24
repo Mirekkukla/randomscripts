@@ -17,7 +17,7 @@ def main():
 
     base_folder = "/Users/mirek/temp/"
     filepath_to_read = os.path.abspath(base_folder + "soph_2018_tx.tsv")
-    filepath_to_write = os.path.abspath(base_folder + "soph_2018_categorized_tx.tsv")
+    filepath_to_write = os.path.abspath(base_folder + "all_2018_categorized_tx.tsv")
 
     lines = None
     with open(filepath_to_read, "r") as f_read:
@@ -60,13 +60,17 @@ def main():
 
     per_line_query = None
     remaining_lines = []
+    small_count = small_amt_total = 0
     for line in lines:
         if substring_match(line, all_terms): # skip if line matches a term
             continue
+        elif abs(get_amt(line)) < 8:
+            small_count += 1
+            small_amt_total += get_amt(line)
         else:
             remaining_lines.append(line)
 
-        per_line_query = "" # searching for a specific candidate term
+        per_line_query = "WALGREENS" # searching for a specific candidate term
         if per_line_query and substring_match(line, [per_line_query]):
             print line
 
@@ -76,6 +80,11 @@ def main():
         print_historgram(get_word_distribution(remaining_lines, all_terms))
 
     print "Total left: {}".format(len(remaining_lines))
+    print "Remainder worth: {}".format(sum(get_amt(line) for line in remaining_lines))
+    print "Small count: {} amount: {}".format(small_count, small_amt_total)
+
+    write_to_file(remaining_lines, filepath_to_write)
+
 
 
 def substring_match(line_str, candidate_substrings):
@@ -93,6 +102,17 @@ def substring_match(line_str, candidate_substrings):
     if re.match(expr.lower(), line_str.lower()):
         return True
     return False
+
+
+def get_amt(line):
+    return float(line.split("\t")[-1].replace(",", ""))
+
+
+def write_to_file(remaining_lines, filepath_to_write):
+    with open(filepath_to_write, "w") as f:
+        for line in remaining_lines:
+            f.write(line + "\n")
+    print "Wrote {} lines to \n{}".format(len(remaining_lines), filepath_to_write)
 
 # METHODS TO HELP FIND ADDITIONAL LABEL KEYWORDS
 
