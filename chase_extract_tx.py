@@ -28,8 +28,9 @@ import os
 def main():
 
     base_folder = "/Users/mirek/temp/"
-    filepath_to_read = os.path.abspath(base_folder + "mirek_2018_raw.txt")
-    filepath_to_write = os.path.abspath(base_folder + "mirek_2018_tx.tsv")
+    # sanity check raw data looks right: grep -n "Payment Due Date" soph_2018_raw.txt
+    filepath_to_read = os.path.abspath(base_folder + "soph_2018_raw.txt")
+    filepath_to_write = os.path.abspath(base_folder + "soph_2018_tx.tsv")
 
     matches = extract_tx_lines(filepath_to_read)
     print "\n".join(matches)
