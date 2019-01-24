@@ -26,23 +26,33 @@ def main():
         if "brew" in line.lower():
             continue
 
-        for coffee_term in ["costa", "starbucks", "philz", "java"]:
-            if coffee_term in line.lower():
-                continue
+        if "uber" in line.lower():
+            continue
 
-        for food_term in ["restaur", "sushi"]:
-            if food_term in line.lower():
-                continue
+        coffee_terms = ["coffee", "costa", "starbucks", "philz", "java"]
+        if substring_match(line, coffee_terms):
+            continue
 
+        food_terms = ["restaur", "sushi"]
+        if substring_match(line, food_terms):
+            continue
 
-
-        if "coffee" in line.lower():
+        if "" in line.lower():
             print line
 
         # continue
 
         # print line
 
+def substring_match(line_str, candidate_substrings):
+    """
+    Return true iff one of the strings in the `candidate_substrings` array is
+    a subtring of `line_str`. Matches are considered on a case-insensitive basis
+    """
+    expr = ".*({}).*".format("|".join(candidate_substrings).lower())
+    if re.match(expr, line_str.lower()):
+        return True
+    return False
 
 if __name__ == "__main__":
     main()
