@@ -6,8 +6,7 @@ Try to categorize each transaction by examining the description.
 
 Export the resulting data as a new .tsv
 
-Set up to make it easy to populate key word terms. Useful methods
-
+Set up to make it easy to populate key word terms
 """
 
 import os
@@ -70,7 +69,7 @@ def main():
         else:
             remaining_lines.append(line)
 
-        per_line_query = "WALGREENS" # searching for a specific candidate term
+        per_line_query = "" # searching for a specific candidate term
         if per_line_query and substring_match(line, [per_line_query]):
             print line
 
@@ -84,8 +83,7 @@ def main():
     print "Small count: {} amount: {}".format(small_count, small_amt_total)
 
     write_to_file(remaining_lines, filepath_to_write)
-
-
+    # print_total_for_terms(lines, alcohol_terms)
 
 def substring_match(line_str, candidate_substrings):
     """
@@ -113,6 +111,16 @@ def write_to_file(remaining_lines, filepath_to_write):
         for line in remaining_lines:
             f.write(line + "\n")
     print "Wrote {} lines to \n{}".format(len(remaining_lines), filepath_to_write)
+
+
+def print_total_for_terms(lines, terms):
+    total = 0
+    for line in lines:
+        if substring_match(line, terms):
+            total += get_amt(line)
+    print "Total is " + str(total)
+
+
 
 # METHODS TO HELP FIND ADDITIONAL LABEL KEYWORDS
 
