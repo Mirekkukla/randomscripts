@@ -17,7 +17,7 @@ def main():
     filepath_to_write = os.path.abspath(base_folder + "mirek_2018_categorized_tx.tsv")
 
     lines = None
-    with open(filepath_to_read) as f_read:
+    with open(filepath_to_read, "r") as f_read:
         lines = f_read.read().splitlines()
 
     # count how many times each description occurs
@@ -25,30 +25,31 @@ def main():
 
     for line in lines:
 
-        alcohol_terms = ["brew", "liquor", "beer"]
-        if substring_match(line, alcohol_terms):
+        # cancel out CC fees
+        if substring_match(line, ["TRAVEL CREDIT"]):
             continue
 
-        travel_terms = ["uber", "limebike"]
-        if substring_match(line, travel_terms):
+        # payments / transfers
+        if substring_match(line, ["AUTOMATIC PAYMENT"]):
             continue
 
-        coffee_terms = ["coffee", "costa", "starbucks", "philz", "java"]
-        if substring_match(line, coffee_terms):
+        alcohol_terms = ["brew", "liquor", "beer", "PUBLIC HO"]
+        commute_terms = ["uber", "limebike", "WWW.CD.CZ", "BIRD", "PARKING KITTY"]
+        coffee_terms = ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's"]
+        restaurant_terms = ["restaur", "sushi", "BILA VRANA", "pizza", "grill"]
+        housing_terms = ["AIRBNB", "hotel"]
+        grocery_terms = ["Billa", "ALBERT", "market", "SAFEWAY"]
+        books_games_gifts_terms = ["AMAZON", "POWELL"]
+        vpn_spotify_website_terms = ["AVNGATE", "Spotify", "GHOST"]
+
+        if substring_match(line, alcohol_terms + commute_terms + coffee_terms +
+                           restaurant_terms + housing_terms + grocery_terms +
+                           books_games_gifts_terms + vpn_spotify_website_terms):
             continue
 
-        food_terms = ["restaur", "sushi"]
-        if substring_match(line, food_terms):
-            continue
 
         if substring_match(line, [""]):
             print line
-
-
-        # continue
-        # print line
-
-
 
         desc = line.split("\t")[1]
         if desc not in desc_count:
@@ -56,6 +57,7 @@ def main():
         desc_count[desc] += 1
 
     print_description_count(desc_count)
+    print "Total left: {}".format(sum(int(v) for v in desc_count.values()))
 
 
 def substring_match(line_str, candidate_substrings):
