@@ -23,11 +23,16 @@ Added as a sanity check:
 """
 
 import re
+import os
 
 def main():
 
+    base_folder = "/Users/mirek/temp/"
+    filepath_to_read = os.path.abspath(base_folder + "mirek_2018_raw.txt")
+    filepath_to_write = os.path.abspath(base_folder + "mirek_2018_tx.csv")
+
     lines = None
-    with open("../../temp/mirek_2018_raw.txt", "r") as f_read:
+    with open(filepath_to_read, "r") as f_read:
         lines = f_read.read().splitlines()
 
     matches = []
@@ -39,12 +44,11 @@ def main():
 
     print "\n".join(matches)
 
-    out_filename = "../../temp/mirek_2018_tx.csv"
-    with open(out_filename, "w") as f_write:
+    with open(filepath_to_write, "w") as f_write:
         for tx_line in matches:
             f_write.write(tx_line + "\n")
 
-    print "Wrote {} tx to '{}'".format(len(matches), out_filename)
+    print "Wrote {} tx to '{}'".format(len(matches), filepath_to_write)
 
 if __name__ == '__main__':
     main()
