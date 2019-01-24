@@ -17,6 +17,9 @@ The following observations are important:
 - tx amounts might be negative
 - tx lines allways end in ".XX"
 - tx amounts might be in the thousands (and thus have commas)
+
+Added as a sanity check:
+- tx lines always start with a date "XX/XX"
 """
 
 import re
@@ -24,21 +27,24 @@ import re
 def main():
 
     lines = None
-    with open("../../temp/oct_mirek2") as f:
-        lines = f.read().splitlines()
+    with open("../../temp/mirek_2018_raw.txt", "r") as f_read:
+        lines = f_read.read().splitlines()
 
     matches = []
     for line in lines:
-
-        exp = r'.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
+        exp = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
         if re.match(exp, line):
             print line
             matches.append(line)
 
-    print len(matches)
+    print "\n".join(matches)
 
+    out_filename = "../../temp/mirek_2018_tx.csv"
+    with open(out_filename, "w") as f_write:
+        for tx_line in matches:
+            f_write.write(tx_line + "\n")
 
-
+    print "Wrote {} tx to '{}'".format(len(matches), out_filename)
 
 if __name__ == '__main__':
     main()
