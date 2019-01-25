@@ -11,33 +11,41 @@ Try to categorize each tx using existing terms.
 
 import os
 import re
+from chase_extract_tx import BASE_FOLDER
 
 # terms with spaces are deliberate so as to minimize false positives
 # terms with substrinfs of read words are meant to capture variations on a word
 terms = {
-    'canceled_out_terms': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT"],
+    'canceled_out': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT"],
+    
+    # flight, train, uber, other transport
+    'FL': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
+    'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
+    'UB': ["uber", "limebike", "LYFT", "BIRD", ],
+    'OT': ["PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
 
-    'flight_terms': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
-    'train_terms': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
-    'car_metro_terms': ["uber", "limebike", "LYFT", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT",
-                        "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
-    'housing_terms': ["AIRBNB", "hotel"],
-    'activity_terms': ["VIATOR"],
+    # housing, activity
+    'H': ["AIRBNB", "hotel"],
+    'A': ["VIATOR"],
 
-    'coffee_terms': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
-    'restaurant_terms': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
-                         "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
-                         "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
-                         "PHO", "pizz", "REST", "TAVERN"],
-    'alcohol_terms': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
-                      "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
-                      "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
-    'grocery_terms': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
+    # coffee, restaurant, booze, store
+    'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
+    'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
+           "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
+           "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
+           "PHO", "pizz", "REST", "TAVERN"],
+    'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
+           "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
+           "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
+    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
 
-    'books_games_gifts_terms': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
-    'clothes_hair_spa_terms': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
-    'vpn_spotify_website_phone_terms': ["AVNGATE", "Spotify", "GHOST", "google"],
-    'language_course_terms': ["CZLT.CZ"]
+    # entertainment (gifts-books-games), body (clothes-hair-spa),
+    # vpn-spotify-website-phone, language-course
+    'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
+    'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
+    'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
+    'LNG': ["CZLT.CZ"],
+    'O' : [] # other
 }
 
 def main():
@@ -68,13 +76,20 @@ def main():
     print "Remainder worth: {}".format(sum(get_amt(line) for line in remaining_lines))
     print "Small count: {} amount: {}".format(small_count, small_amt_total)
 
+    # export remaining lines into CSV form for easy manual fill-in
+
+    remaining_lines_filepath = os.path.abspath(BASE_FOLDER + "remaining_lines.tsv")
+    with open(remaining_lines_filepath, "w") as f_out:
+        for line in remaining_lines:
+            f_out.write(line + "\n")
+    print "Remaining lines at \n{}".format(remaining_lines_filepath)
+
 
 # FILE READING AND WRITING
 
 def load_lines():
-    base_folder = "/Users/mirek/temp/"
-    filepath_to_read = os.path.abspath(base_folder + "soph_2018_tx.tsv")
-    filepath_to_write = os.path.abspath(base_folder + "all_2018_categorized_tx.tsv")
+    filepath_to_read = os.path.abspath(BASE_FOLDER + "soph_2018_tx.tsv")
+    filepath_to_write = os.path.abspath(BASE_FOLDER + "all_2018_categorized_tx.tsv")
 
     lines = None
     with open(filepath_to_read, "r") as f_read:
@@ -95,8 +110,7 @@ def substring_match(line_str, candidate_substrings):
     a subtring of `line_str`. Matches are considered on a case-insensitive basis
     """
     if not isinstance(candidate_substrings, list):
-        print "Didn't pass an array"
-        exit(0)
+        raise Exception("Didn't pass an array")
 
     expr = ".*({}).*".format("|".join(candidate_substrings))
     # note that it'd be more efficient to use re.compile() to compile each regex

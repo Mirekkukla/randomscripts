@@ -25,12 +25,12 @@ Added as a sanity check:
 import re
 import os
 
-def main():
+BASE_FOLDER = "/Users/mirek/temp/"
 
-    base_folder = "/Users/mirek/temp/"
+def main():
     # sanity check raw data looks right: grep -n "Payment Due Date" soph_2018_raw.txt
-    filepath_to_read = os.path.abspath(base_folder + "soph_2018_raw.txt")
-    filepath_to_write = os.path.abspath(base_folder + "soph_2018_tx.tsv")
+    filepath_to_read = os.path.abspath(BASE_FOLDER + "soph_2018_raw.txt")
+    filepath_to_write = os.path.abspath(BASE_FOLDER + "soph_2018_tx.tsv")
 
     matches = extract_tx_lines(filepath_to_read)
     print "\n".join(matches)
