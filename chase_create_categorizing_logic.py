@@ -63,7 +63,7 @@ terms = {
     'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
     'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
     'LNG': ["CZLT.CZ"],
-    'O' : [] # other
+    '?' : [] # other
 }
 
 def main():

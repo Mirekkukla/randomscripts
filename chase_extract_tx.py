@@ -28,15 +28,23 @@ import os
 BASE_FOLDER = "/Users/mirek/temp/"
 
 def main():
-    # sanity check raw data looks right: grep -n "Payment Due Date" soph_2018_raw.txt
-    filepath_to_read = os.path.abspath(BASE_FOLDER + "soph_2018_raw.txt")
-    filepath_to_write = os.path.abspath(BASE_FOLDER + "soph_2018_tx.tsv")
+    run_for_name_prefix("mirek")
+    run_for_name_prefix("soph")
 
-    matches = extract_tx_lines(filepath_to_read)
+
+def run_for_name_prefix(prefix):
+    print "Running for '{}'".format(prefix)
+    # sanity check raw data looks right: grep -n "Payment Due Date" soph_2018_raw.txt
+    filepath_to_read = os.path.abspath(BASE_FOLDER + prefix + "_2018_raw.txt")
+    filepath_to_write = os.path.abspath(BASE_FOLDER + prefix + "_2018_tx.tsv")
+
+    raw_matches = extract_tx_lines(filepath_to_read)
+    matches = filter_leading_tx_lines(raw_matches)
     print "\n".join(matches)
 
-    tab_delimited_matches = cleanup_matches(matches)
+    tab_delimited_matches = convert_to_tsv(matches)
     write_to_file(tab_delimited_matches, filepath_to_write)
+    print "Done for {}\n".format(prefix)
 
 
 def extract_tx_lines(file_to_read):
@@ -48,13 +56,36 @@ def extract_tx_lines(file_to_read):
     for line in lines:
         exp = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
         if re.match(exp, line):
-            print line
             matches.append(line)
+            continue
 
     return matches
 
 
-def cleanup_matches(matches):
+def filter_leading_tx_lines(lines):
+    """
+    HACK: we want to ignore all tx <= 2/15 (2018), but the tx data
+    starts on 12/08 (2018). Since tx rows don't have a date, we'll need
+    to do some hackery to remove the leading stuff
+
+    This logic depends on the given lines being chronological
+    Returns the "filtered" list of tx lines
+    """
+    print "Removing leading tx prior to 2/15/18"
+    for i, line in enumerate(lines):
+        
+        # more hackery: the "payment" line comes before the 12/15/18 txs
+        if "AUTOMATIC PAYMENT" in line:
+            continue
+
+        date_str = line.split(" ")[0] # "MM/DD"
+        if date_str >= "02/15" and date_str <= "12/00":
+            print "Removed {} tx".format(i)
+            return lines[i:]
+        print "Nuking " + line
+
+
+def convert_to_tsv(matches):
     clean_lines = []
     for line in matches:
         split_on_space = line.split(" ")
