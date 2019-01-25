@@ -73,6 +73,7 @@ def main():
     match_count = 0
     manually_categorized_count = 0
 
+    # if new categorization conflict with old, we'll keep the old
     new_categorized_tx_path = os.path.abspath(BASE_FOLDER + "new_categorized_tx.tsv")
     categorizations = load_new_categorized_tx(new_categorized_tx_path)
 
@@ -80,7 +81,6 @@ def main():
     update_with_old_categorizations(categorizations, old_categorizations_path)
 
     lines = load_all_tx_lines()
-
     for line in lines:
 
         # manual categorizations
@@ -105,7 +105,7 @@ def main():
         print_distribution(get_desc_distribution(remaining_lines, all_terms))
         # print_distribution(get_word_distribution(remaining_lines, all_terms))
 
-    print "Total lines: {}".format(len(lines))
+    print "\nTotal lines: {}".format(len(lines))
     print "- Manually categorized: {}".format(manually_categorized_count)
     print "- Matched a term: {}".format(match_count)
     print "- Remaining: {}".format(len(remaining_lines)) 
@@ -134,11 +134,11 @@ def load_new_categorized_tx(filepath):
         if desc not in categorizations:
             categorizations[desc] = category
 
-    print "Loaded {} lines, {} were categorized\n".format(len(lines), len(categorizations))
+    print "{} lines were categorized\n".format(len(categorizations))
     return categorizations
 
 
-# mutates categorizations
+# mutates `categorizations`
 def update_with_old_categorizations(categorizations, filepath):
     lines = load_from_file(filepath)
     total_added = 0
@@ -148,7 +148,8 @@ def update_with_old_categorizations(categorizations, filepath):
         if desc not in categorizations:
             categorizations[desc] = category
             total_added += 1
-    print "Loaded {} old categorizations".format(total_added)
+    print "Added {} additional old categorizations\n".format(total_added)
+
 
 def load_all_tx_lines():
     filepath_to_read = os.path.abspath(BASE_FOLDER + "soph_2018_tx.tsv")
@@ -162,17 +163,20 @@ def load_all_tx_lines():
     if not lines:
         raise Exception("Didn't find any tx lines, something is wrong")
 
+    print "Loaded {} total tx lines\n".format(len(lines))
     return lines
 
 
 def load_from_file(filepath):
     if not os.path.exists(filepath):
-        print "No file at {}, ignoring\n".format(filepath)
+        print "No file at {}, ignoring".format(filepath)
         return []
 
-    print "Loading lines from\n{}".format(filepath)
+    print "Loading lines from {}".format(filepath)
     with open(filepath) as f_read:
-        return f_read.read().splitlines()
+        lines = f_read.read().splitlines()
+        print "Loaded {} lines".format(len(lines))
+        return lines
 
 
 def write_to_file(lines, filepath):
@@ -230,6 +234,7 @@ def get_word_distribution(lines, terms_to_filter_out):
 
 
 def print_distribution(occurance_count_by_desc):
+    print "Distribution:"
     for desc, count in sorted(occurance_count_by_desc.iteritems(), key=lambda (k, v): v):
         if count >= 3:
             print "{}: {}".format(desc, count)
