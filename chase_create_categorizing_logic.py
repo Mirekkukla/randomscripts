@@ -30,6 +30,8 @@ Once there are no more `remaining_lines.tsv` you can move to the final export st
 import os
 import re
 from chase_extract_tx import BASE_FOLDER
+from chase_extract_tx import convert_to_tsv
+
 
 # terms with spaces are deliberate so as to minimize false positives
 # terms with substrinfs of read words are meant to capture variations on a word
@@ -74,7 +76,7 @@ def main():
     manually_categorized_count = 0
 
     # if new categorization conflict with old, we'll keep the old
-    new_categorized_tx_path = os.path.abspath(BASE_FOLDER + "new_categorized_tx.tsv")
+    new_categorized_tx_path = os.path.abspath(BASE_FOLDER + "new_categorized_tx.txt")
     categorizations = load_new_categorized_tx(new_categorized_tx_path)
 
     old_categorizations_path = os.path.abspath(BASE_FOLDER + "old_categorizations.tsv")
@@ -126,10 +128,10 @@ def load_new_categorized_tx(filepath):
     lines = load_from_file(filepath)
     categorizations = {}
     for line in lines:
-        category = line.split("\t")[3] # fourth column is empty if there's no manual category
+        category = line.split(" ")[-1] # fourth column is empty if there's no manual category
         if not category:
             continue
-        desc = line.split("\t")[1]
+        desc = " ".join(line.split(" ")[1:-1])
 
         if desc not in categorizations:
             categorizations[desc] = category
