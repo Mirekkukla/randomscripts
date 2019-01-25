@@ -48,22 +48,45 @@ terms = {
     'O' : [] # other
 }
 
+def load_manually_categorized():
+    filepath = os.path.abspath(BASE_FOLDER + "manually_categorized.tsv")
+    print "Loading manually categorized lines from\n{}\n".format(filepath)
+    
+    lines = None
+    with open(filepath) as f_read:
+        lines = f_read.read().splitlines()
+
+    categorized_descs = set()
+    for line in lines:
+        if not line.split("\t")[3]: # fourth column is empty if there's no manual category
+            continue
+        desc = line.split("\t")[1]
+        categorized_descs.add(desc)
+    
+    return categorized_descs
+
+
 def main():
     all_terms = reduce(lambda l1, l2: l1 + l2, terms.values())
-
     per_line_query = None
     remaining_lines = []
-    small_count = small_amt_total = 0
-    for line in load_lines():
-        if substring_match(line, all_terms): # skip if line matches a term
-            continue
-        elif abs(get_amt(line)) < 4:
-            small_count += 1
-            small_amt_total += get_amt(line)
-        else:
-            remaining_lines.append(line)
+    match_count = 0
 
-        per_line_query = "" # searching for a specific candidate term
+    lines = load_lines()
+    manually_categorized = load_manually_categorized()
+
+    for line in lines:
+        desc = line.split("\t")[1]
+        if desc in manually_categorized:
+            continue
+
+        if substring_match(line, all_terms): # skip if line matches a term
+            match_count += 1
+            continue
+        
+        remaining_lines.append(line)
+
+        per_line_query = "asdf" # searching for a specific candidate term
         if per_line_query and substring_match(line, [per_line_query]):
             print line
 
@@ -72,9 +95,10 @@ def main():
         print_distribution(get_desc_distribution(remaining_lines, all_terms))
         # print_distribution(get_word_distribution(remaining_lines, all_terms))
 
-    print "Total left: {}".format(len(remaining_lines))
-    print "Remainder worth: {}".format(sum(get_amt(line) for line in remaining_lines))
-    print "Small count: {} amount: {}".format(small_count, small_amt_total)
+    print "Total lines: {}".format(len(lines))
+    print "- Manually categorized: {}".format(len(manually_categorized))
+    print "- Matched a term: {}".format(match_count)
+    print "- Remaining: {}".format(len(remaining_lines)) 
 
     # export remaining lines into CSV form for easy manual fill-in
 
@@ -82,7 +106,7 @@ def main():
     with open(remaining_lines_filepath, "w") as f_out:
         for line in remaining_lines:
             f_out.write(line + "\n")
-    print "Remaining lines at \n{}".format(remaining_lines_filepath)
+    print "\nRemaining lines at \n{}".format(remaining_lines_filepath)
 
 
 # FILE READING AND WRITING
