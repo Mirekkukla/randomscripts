@@ -1,5 +1,6 @@
 """
-Script to find out where Radio Silence is storing its "trial started" data
+Script to help you explore which files are being modified by an application
+Motivating example: find out where Radio Silence is storing its "trial started" data
 
 Steps:
 0. restart the computer (so that no pref values are cached)
@@ -14,8 +15,8 @@ exist after its been uninstalled (we know the file containing trial data
 info is one of these, since Radio Silence "knows" when your original trial started
 even if you uninstall and re-install it).
 
-This script is meant to be used in an exploratory fashion by editing
-the code below the "START PLAYING WITH CODE HERE" comment
+This script is meant to be used in an exploratory fashion
+(see "START PLAYING WITH CODE HERE")
 """
 
 import subprocess
