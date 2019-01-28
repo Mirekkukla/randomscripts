@@ -35,22 +35,22 @@ def main():
     # that's likely to contain the Radio Sience specfic "trial started" data
     # there are various filters we can play with; uncomment the one you want to run
 
-    # run_basic_filter(paths)
-    # grep_contents(paths)
-    print_mirek_owned(paths)
+    # basic_filtered_paths = run_basic_filter(paths)
+    grep_contents(paths, "silence")
+    # print_mirek_owned(basic_filtered_paths)
 
 
-def grep_contents(paths):
-    matches = 0
+def grep_contents(paths, string_to_grep):
+    matched_paths = []
     for path in paths:
-        grep_command = 'grep -i radio "{}"'.format(path)
+        grep_command = 'grep -i {} "{}"'.format(string_to_grep, path)
 
         # `os.system` doesn't let us capture the output, but that's ok - here we just want to print it
         # unlike `subprocess.check_output`, `os.system` doesn't throw exceptions on non-zero exit codes
         # which means it's faster (as well as simpler to use)
         exit_code = os.system(grep_command)
         if exit_code == 0:
-            matches += 1
+            matched_paths.append(path)
 
         # kept here for didactic purposes
         # try:
@@ -60,19 +60,21 @@ def grep_contents(paths):
         # except subprocess.CalledProcessError:
         #     pass
 
-    print matches
+    print len(matched_paths)
+    return matched_paths
 
 
 def print_mirek_owned(paths):
-    matches = 0
+    matched_paths = []
     for path in paths:
         ls_info_raw = subprocess.check_output('ls -la "{}"'.format(path), shell=True)
         ls_info_line = ls_info_raw[:-1] # ditch newline
         if "mirek" in ls_info_line:
             print path
-            matches += 1
+            matched_paths.append(path)
 
-    print matches
+    print len(matched_paths)
+    return matched_paths
 
 
 def run_basic_filter(paths):
@@ -86,14 +88,15 @@ def run_basic_filter(paths):
                 return True
         return False
 
-    matches = 0
-    for path_str in paths:
-        if has_ignorable_keyword(path_str):
+    matched_paths = []
+    for path in paths:
+        if has_ignorable_keyword(path):
             continue
-        print path_str
-        matches += 1
+        print path
+        matched_paths.append(path)
 
-    print matches
+    print len(matched_paths)
+    return matched_paths
 
 
 if __name__ == "__main__":
