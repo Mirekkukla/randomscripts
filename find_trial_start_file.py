@@ -27,17 +27,37 @@ def main():
     paths = []
     for line in lines:
         path_str = "/" + line[:-1]
-        # ignore folder and temp files that no longer exist
-        if os.path.isfile(path_str) and os.path.exists(path_str):
+        # ignore folders / temp files that no longer exist
+        if os.path.isfile(path_str):
             paths.append(path_str)
+
+    print "Total existing files: {}".format(len(paths))
+    # print "\n".join(paths)
 
     # there's way too many files that get "touched" - we want to filter down to a subset
     # that's likely to contain the Radio Sience specfic "trial started" data
     # there are various filters we can play with; uncomment the one you want to run
 
+    print_paths_with_substring(paths, ["bom"])
     # basic_filtered_paths = run_basic_filter(paths)
-    grep_contents(paths, "silence")
+    # grep_contents(paths, "silence")
     # print_mirek_owned(basic_filtered_paths)
+
+
+def print_paths_with_substring(paths, substring_list):
+    matched_paths = []
+    for path in paths:
+        all_match = True
+        for substring in substring_list:
+            if substring.lower() not in path.lower():
+                all_match = False
+
+        if all_match:
+            print path
+            matched_paths.append(path)
+
+    print len(matched_paths)
+    return matched_paths
 
 
 def grep_contents(paths, string_to_grep):
@@ -83,7 +103,8 @@ def run_basic_filter(paths):
     # icudt59l.dat is unicode library related code
     def has_ignorable_keyword(inner_path_str):
         for keyword in ["CoreServices", "Google", "HMA", "Evernote", "Backup and Sync",
-                  "Fonts", "iconservices", "Keyboard", "icudt59l.dat", "Carbon", "timezone"]:
+                  "Fonts", "iconservices", "Keyboard", "icudt59l.dat", "Carbon", "timezone",
+                  "PkgInfo"]:
             if keyword in inner_path_str:
                 return True
         return False
