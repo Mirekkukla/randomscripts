@@ -1,3 +1,4 @@
+#pylint: disable=anomalous-backslash-in-string
 """
 Script to find out where Radio Silence is storing its "trial started" data
 
@@ -12,43 +13,87 @@ The script output will give you all files that were read by Radio Silence that s
 exist after Radio Silence has been installed (we know the file containing trial data
 info is one of these, since Radio Silence "knows" when your original trial started
 even if you uninstall and re-install it).
-
 """
+#pylint: enable=anomalous-backslash-in-string
 
+import subprocess
 import os
 
-IGNORE = ["CoreServices", "Google", "HMA", "Evernote"]
-
-opensnoop_output_file = os.path.abspath("/Users/mirek/touched_files.txt")
-
 def main():
-    lines = []
+    opensnoop_output_file = os.path.abspath("/Users/mirek/touched_files.txt")
     with open(opensnoop_output_file) as f:
         lines = f.read().splitlines()
 
+    paths = []
     for line in lines:
         path_str = "/" + line[:-1]
-        if not should_ignore(path_str):
-            print path_str
+        # ignore folder and temp files that no longer exist
+        if os.path.isfile(path_str) and os.path.exists(path_str):
+            paths.append(path_str)
+
+    # there's way too many files that get "touched" - we want to filter down to a subset
+    # that's likely to contain the Radio Sience specfic "trial started" data
+    # there are various filters we can play with; uncomment the one you want to run
+
+    # run_basic_filter(paths)
+    # grep_contents(paths)
+    print_mirek_owned(paths)
 
 
-# there's way too many files that get "touched" - we want to filter down to a subset
-# that's likely to contain the Radio Sience specfic "trial started" data
-def should_ignore(path_str):
-    # happens to work for Radio Silence, might not for other apps though
-    if "radio" not in path_str.lower():
-        return True
+def grep_contents(paths):
+    matches = 0
+    for path in paths:
+        grep_command = 'grep -i radio "{}"'.format(path)
 
-    # safe for all apps
-    if not os.path.exists(path_str) or not os.path.isfile(path_str):
-        return True
+        # `os.system` doesn't let us capture the output, but that's ok - here we just want to print it
+        # unlike `subprocess.check_output`, `os.system` doesn't throw exceptions on non-zero exit codes
+        # which means it's faster (as well as simpler to use)
+        exit_code = os.system(grep_command)
+        if exit_code == 0:
+            matches += 1
 
-    # probably safe for all apps
-    for i in IGNORE:
-        if i in path_str:
-            return True
+        # kept here for didactic purposes
+        # try:
+        #     grep_result = subprocess.check_output(grep_command, shell=True)
+        #     print grep_result[:-1]
+        #     matches += 1
+        # except subprocess.CalledProcessError:
+        #     pass
 
-    return False
+    print matches
+
+
+def print_mirek_owned(paths):
+    matches = 0
+    for path in paths:
+        ls_info_raw = subprocess.check_output('ls -la "{}"'.format(path), shell=True)
+        ls_info_line = ls_info_raw[:-1] # ditch newline
+        if "mirek" in ls_info_line:
+            print path
+            matches += 1
+
+    print matches
+
+
+def run_basic_filter(paths):
+
+    # probably safe to ignore any file with one of these stings in the path
+    # icudt59l.dat is unicode library related code
+    def has_ignorable_keyword(inner_path_str):
+        for keyword in ["CoreServices", "Google", "HMA", "Evernote", "Backup and Sync",
+                  "Fonts", "iconservices", "Keyboard", "icudt59l.dat", "Carbon", "timezone"]:
+            if keyword in inner_path_str:
+                return True
+        return False
+
+    matches = 0
+    for path_str in paths:
+        if has_ignorable_keyword(path_str):
+            continue
+        print path_str
+        matches += 1
+
+    print matches
 
 
 if __name__ == "__main__":
