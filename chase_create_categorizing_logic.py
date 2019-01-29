@@ -1,37 +1,35 @@
 """
 This script helps you find keywords that can be used to categorize tx,
-and makes it easier to iterate on manual categorization. The resulting keywords
-and manual categorizations will be used by another script export the final fully
-categorized data.
+creates a template you can use to create manual categorizations,
+and sanity checks the resulting file to ensure full coverage.
 
 Input: a clean tsv file of chase tx lines, as exported by `chase_extract_tx.py`
+Output: `REMAINING_LINES_FILENAME` tsv file, consisting of lines that don't have coverage
+
 
 Workflow:
 
-1. Finding candidate keywords "distributions":
+1. Find keywords that can be used to auto-categorize transactions:
 - make sure `per_line_query` is empty
 - uncomment one of the two `print_distribution` lines and run script
 - choose a promising term showing up in a frequently occuring desciption
 - set the term as the value for `per_line_query` and run script
 - if no false positives show up, add the term to the "terms" dictionary
 
-2. Iterating with manual overrides (once term list is pretty fixed):
-- run script (which will export a `remaining_lines.tsv` file)
+2. Creating manual overrides (once the term list is pretty fixed):
+- run this script (which will export `REMAINING_LINES_FILENAME` tsv file)
 - paste the exported file contents into google sheets
 - categorize additional transactions manually in google sheets
-- copy contents from google sheets and replace contents of `new_categorized_tx.tsv`
-- repeat
+- copy contents from google sheets and replace contents of `MANUALLY_CATEGORIZED_FILENAME` using vim
+  - (GOTCHA: sublime doesn't realize that ".tsv" means "use tab delimiters")
+- run this script again to ensure the resulting data is correctly fomatted
 
-Manual categorizations from previous loop iterations are maintaed in `old_categorizations.tsv`
-
-Once there are no more `remaining_lines.tsv` you can move to the final export step.
+Once you have full coverage, you can run the third and final step
 """
 
 import os
 import re
 from chase_extract_tx import BASE_FOLDER
-from chase_extract_tx import convert_to_tsv
-
 
 # terms with spaces are deliberate so as to minimize false positives
 # terms with substrinfs of read words are meant to capture variations on a word
@@ -44,7 +42,7 @@ terms = {
     'UB': ["uber", "LYFT"],
     'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
 
-    # housing, activity
+    # housing, activities
     'H': ["AIRBNB", "hotel"],
     'A': ["VIATOR"], # visas go in here too
 
@@ -65,13 +63,17 @@ terms = {
     'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
     # digital (vpn-spotify-website-phone)
     'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
+    
+    # misc
     'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
     'MOV': [], # moving
     'HLT': [], # insurance, doctors, etc
     'HMM': [], # sketchy shit
-    'I': [], # unknown small charge, ignore
-    '?' : [] # unknown, return to later
+    'I': [] # unknown small charge, ignore
 }
+
+MANUALLY_CATEGORIZED_FILENAME = "manually_categorized_tx.tsv"
+REMAINING_LINES_FILENAME = "remaining_lines.tsv"
 
 def main():
     all_terms = reduce(lambda l1, l2: l1 + l2, terms.values())
@@ -80,11 +82,8 @@ def main():
     match_count = 0
     categorized_count = 0
 
-    new_categorized_tx_path = os.path.abspath(BASE_FOLDER + "new_categorized_tx.tsv")
+    new_categorized_tx_path = os.path.abspath(BASE_FOLDER + MANUALLY_CATEGORIZED_FILENAME)
     categorizations = load_new_categorized_tx(new_categorized_tx_path)
-
-    old_categorizations_path = os.path.abspath(BASE_FOLDER + "old_categorizations.tsv")
-    # update_with_old_categorizations(categorizations, old_categorizations_path)
 
     lines = load_all_tx_lines()
     check_tsv_tx_format(lines)
@@ -101,7 +100,7 @@ def main():
         if substring_match(line, all_terms):
             match_count += 1
             continue
-        
+
         remaining_lines.append(line)
 
         per_line_query = "" # searching for a specific candidate term
@@ -116,16 +115,15 @@ def main():
     print "\nTotal lines: {}".format(len(lines))
     print "- Manually categorized: {}".format(categorized_count)
     print "- Matched a term: {}".format(match_count)
-    print "- Remaining: {}".format(len(remaining_lines)) 
+    print "- Remaining: {}\n".format(len(remaining_lines))
 
     # export remaining lines into CSV form manual fill-in in google sheets
-    remaining_lines_filepath = os.path.abspath(BASE_FOLDER + "remaining_lines.tsv")
-    write_to_file(remaining_lines, remaining_lines_filepath)
-
-    # replace old manually categorized file
-    old_categorizations_as_list = [desc + "\t" + category for desc, category in categorizations.iteritems()]
-    write_to_file(old_categorizations_as_list, old_categorizations_path)
-
+    remaining_lines_filepath = os.path.abspath(BASE_FOLDER + REMAINING_LINES_FILENAME)
+    if remaining_lines:
+        write_to_file(remaining_lines, remaining_lines_filepath)
+    elif os.path.isfile(remaining_lines_filepath):
+        print "No remaining lines, nuking existing file at {}".format(remaining_lines_filepath)
+        os.remove(remaining_lines_filepath)
 
 # FILE READING AND WRITING
 
@@ -133,9 +131,9 @@ def main():
 # returns a map from {line (w/o categorizaion) -> categorization}
 def load_new_categorized_tx(filepath):
     raw_lines = load_from_file(filepath)
+    check_tsv_tx_format(raw_lines, with_category=True)
     lines = fix_gdocs_number_formatting(raw_lines)
 
-    check_tsv_tx_format(lines, with_category=True)
     categorizations = {}
     for line in lines:
         category = line.split("\t")[-1] # fourth column is empty if there's no manual category
@@ -169,30 +167,11 @@ def fix_gdocs_number_formatting(raw_lines):
     return fixed_lines
 
 
-# mutates `categorizations`
-def update_with_old_categorizations(categorizations, filepath):
-    lines = load_from_file(filepath)
-    total_added = 0
-    for line in lines:
-        naked_line = line.split("\t")[-1]
-        category = line.rsplit("\t", 1)[0]
-        if category not in terms:
-            raise Exception("Bad category '{}' in '{}'".format(category, line))
-
-        if naked_line not in categorizations:
-            categorizations[naked_line] = category
-            total_added += 1
-    print "Added {} additional old categorizations\n".format(total_added)
-
-
 def load_all_tx_lines():
-    filepath_to_read = os.path.abspath(BASE_FOLDER + "soph_2018_tx.tsv")
-    filepath_to_write = os.path.abspath(BASE_FOLDER + "all_2018_categorized_tx.tsv")
-
-    lines = load_from_file(filepath_to_read)
-
-    # TEMPTEMPTEMPTMEP
-    lines += load_from_file(filepath_to_read.replace("soph", "mirek"))
+    lines = []
+    for name in ["mirek", "soph"]:
+        filepath_to_read = os.path.abspath(BASE_FOLDER + name + "_2018_tx.tsv")
+        lines += load_from_file(filepath_to_read)
 
     if not lines:
         raise Exception("Didn't find any tx lines, something is wrong")
