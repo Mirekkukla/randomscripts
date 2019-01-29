@@ -19,7 +19,7 @@ Workflow:
 - run script (which will export a `remaining_lines.tsv` file)
 - paste the exported file contents into google sheets
 - categorize additional transactions manually in google sheets
-- copy contents from google sheets and replace contents of `new_categorized_tx.txt`
+- copy contents from google sheets and replace contents of `new_categorized_tx.tsv`
 - repeat
 
 Manual categorizations from previous loop iterations are maintaed in `old_categorizations.tsv`
@@ -78,22 +78,23 @@ def main():
     per_line_query = None
     remaining_lines = []
     match_count = 0
-    manually_categorized_count = 0
+    categorized_count = 0
 
-    # if new categorization conflict with old, we'll keep the old
-    new_categorized_tx_path = os.path.abspath(BASE_FOLDER + "new_categorized_tx.txt")
+    new_categorized_tx_path = os.path.abspath(BASE_FOLDER + "new_categorized_tx.tsv")
     categorizations = load_new_categorized_tx(new_categorized_tx_path)
 
     old_categorizations_path = os.path.abspath(BASE_FOLDER + "old_categorizations.tsv")
     # update_with_old_categorizations(categorizations, old_categorizations_path)
 
     lines = load_all_tx_lines()
+    check_tsv_tx_format(lines)
+    check_no_bogus_categorizations(categorizations, lines)
+
     for line in lines:
 
         # manual categorizations
-        desc = line.split("\t")[1]
-        if desc in categorizations:
-            manually_categorized_count += 1
+        if line in categorizations:
+            categorized_count += 1
             continue
 
         # term matching
@@ -113,7 +114,7 @@ def main():
         # print_distribution(get_word_distribution(remaining_lines, all_terms))
 
     print "\nTotal lines: {}".format(len(lines))
-    print "- Manually categorized: {}".format(manually_categorized_count)
+    print "- Manually categorized: {}".format(categorized_count)
     print "- Matched a term: {}".format(match_count)
     print "- Remaining: {}".format(len(remaining_lines)) 
 
@@ -128,9 +129,13 @@ def main():
 
 # FILE READING AND WRITING
 
-# returns a map from {description -> categorization}
+
+# returns a map from {line (w/o categorizaion) -> categorization}
 def load_new_categorized_tx(filepath):
-    lines = load_from_file(filepath)
+    raw_lines = load_from_file(filepath)
+    lines = fix_gdocs_number_formatting(raw_lines)
+
+    check_tsv_tx_format(lines, with_category=True)
     categorizations = {}
     for line in lines:
         category = line.split("\t")[-1] # fourth column is empty if there's no manual category
@@ -139,12 +144,29 @@ def load_new_categorized_tx(filepath):
         if category not in terms:
             raise Exception("Bad category '{}' in '{}'".format(category, line))
 
-        desc = line.split("\t")[1]
-        if desc not in categorizations:
-            categorizations[desc] = category
+        naked_line = line.rsplit("\t", 1)[0]
+        categorizations[naked_line] = category
 
-    print "{} lines were categorized\n".format(len(categorizations))
+    # note that not all lines are distinct (e.g. "CRUNCH112 800-547-1743 NY")
+    print "{} lines ({} distinct) were categorized\n".format(len(lines), len(categorizations))
     return categorizations
+
+
+def fix_gdocs_number_formatting(raw_lines):
+    """ Google docs prefixes a zero to amts < 1 dollar, remove it to match chase """
+    fixed_lines = []
+    for line in raw_lines:
+        number_str = line.split('\t')[-2]
+        if number_str[0] == "0":
+            chunk_before_num = line.rsplit('\t', 2)[0]
+            fixed_num = number_str[1:]
+            chunk_after_num = line.split('\t')[-1]
+
+            fixed_line = '\t'.join([chunk_before_num, fixed_num, chunk_after_num])
+            fixed_lines.append(fixed_line)
+        else:
+            fixed_lines.append(line)
+    return fixed_lines
 
 
 # mutates `categorizations`
@@ -152,10 +174,13 @@ def update_with_old_categorizations(categorizations, filepath):
     lines = load_from_file(filepath)
     total_added = 0
     for line in lines:
-        desc = line.split("\t")[0]
-        category = line.split("\t")[1]
-        if desc not in categorizations:
-            categorizations[desc] = category
+        naked_line = line.split("\t")[-1]
+        category = line.rsplit("\t", 1)[0]
+        if category not in terms:
+            raise Exception("Bad category '{}' in '{}'".format(category, line))
+
+        if naked_line not in categorizations:
+            categorizations[naked_line] = category
             total_added += 1
     print "Added {} additional old categorizations\n".format(total_added)
 
@@ -165,14 +190,14 @@ def load_all_tx_lines():
     filepath_to_write = os.path.abspath(BASE_FOLDER + "all_2018_categorized_tx.tsv")
 
     lines = load_from_file(filepath_to_read)
-    
+
     # TEMPTEMPTEMPTMEP
     lines += load_from_file(filepath_to_read.replace("soph", "mirek"))
 
     if not lines:
         raise Exception("Didn't find any tx lines, something is wrong")
 
-    print "Loaded {} total tx lines\n".format(len(lines))
+    print "Loaded {} total tx lines".format(len(lines))
     return lines
 
 
@@ -194,6 +219,30 @@ def write_to_file(lines, filepath):
             f.write(line + "\n")
     print "\nWrote {} lines to\n{}".format(len(lines), filepath)
 
+
+# SANITY CHECKS
+
+def check_tsv_tx_format(lines, with_category=False):
+    leading_date_exp = r'^[0-9]{2}/[0-9]{2}' # "MM/DD"
+    number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
+    end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
+    tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + end_of_line_exp
+
+    for line in lines:
+        if not re.match(tsv_tx_expr, line):
+            print "Split on tab: {}".format(line.split('\t'))
+            raise Exception("Line not in tsv tx format: '{}'".format(line))
+
+    print "Passed tsv tx format check"
+
+
+def check_no_bogus_categorizations(categorizations, lines):
+    """ Makes sure every manual categorization corresponds to an actual tx """
+    lines_as_set = set(lines)
+    for categorized_line in categorizations.keys():
+        if categorized_line not in lines_as_set:
+            print [categorized_line]
+            raise Exception("Bogus categorized line: '{}'".format(categorized_line))
 
 # TEXT PROCESSING
 
