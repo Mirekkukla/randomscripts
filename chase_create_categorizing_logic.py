@@ -24,7 +24,8 @@ Workflow:
   - (GOTCHA: sublime doesn't realize that ".tsv" means "use tab delimiters")
 - run this script again to ensure the resulting data is correctly fomatted
 
-Once you have full coverage, you can run the third and final step
+3. If there are no more uncategorized transactions, the full list of categorized tx
+   is exported to `FINAL_CATEGORIZED_FILENAME`
 """
 
 import os
@@ -74,11 +75,13 @@ terms = {
 
 MANUALLY_CATEGORIZED_FILENAME = "manually_categorized_tx.tsv"
 REMAINING_LINES_FILENAME = "remaining_lines.tsv"
+FINAL_CATEGORIZED_FILENAME = "final_categorized_tx.tsv"
+
 
 def main():
-    all_terms = reduce(lambda l1, l2: l1 + l2, terms.values())
     per_line_query = None
     remaining_lines = []
+    final_lines = []
     match_count = 0
     categorized_count = 0
 
@@ -93,11 +96,16 @@ def main():
 
         # manual categorizations
         if line in categorizations:
+            final_line = line + '\t' + categorizations[line]
+            final_lines.append(final_line)
             categorized_count += 1
             continue
 
         # term matching
-        if substring_match(line, all_terms):
+        matching_category = get_matching_category(line)
+        if matching_category:
+            final_line = line + '\t' + matching_category
+            final_lines.append(final_line)
             match_count += 1
             continue
 
@@ -112,10 +120,14 @@ def main():
     #     print_distribution(get_desc_distribution(remaining_lines, all_terms))
         # print_distribution(get_word_distribution(remaining_lines, all_terms))
 
-    print "\nTotal lines: {}".format(len(lines))
+    print "\nTotal lines processed: {}".format(len(lines))
+    print "Total categorized: {}".format(len(final_lines))
     print "- Manually categorized: {}".format(categorized_count)
     print "- Matched a term: {}".format(match_count)
-    print "- Remaining: {}\n".format(len(remaining_lines))
+    print "Remaining: {}\n".format(len(remaining_lines))
+
+    if len(final_lines) != categorized_count + match_count:
+        raise Exception("Counts don't add up")
 
     # export remaining lines into CSV form manual fill-in in google sheets
     remaining_lines_filepath = os.path.abspath(BASE_FOLDER + REMAINING_LINES_FILENAME)
@@ -125,8 +137,15 @@ def main():
         print "No remaining lines, nuking existing file at {}".format(remaining_lines_filepath)
         os.remove(remaining_lines_filepath)
 
-# FILE READING AND WRITING
+    # process final lines
+    if not remaining_lines:
+        final_list_filepath = os.path.abspath(BASE_FOLDER + FINAL_CATEGORIZED_FILENAME)
+        print "FULL COVERAGE, writing final list to: \n{}".format(final_list_filepath)
+        check_tsv_tx_format(final_lines, True)
+        write_to_file(final_lines, final_list_filepath)
 
+
+# FILE READING AND WRITING
 
 # returns a map from {line (w/o categorizaion) -> categorization}
 def load_new_categorized_tx(filepath):
@@ -196,7 +215,7 @@ def write_to_file(lines, filepath):
     with open(filepath, "w") as f:
         for line in lines:
             f.write(line + "\n")
-    print "\nWrote {} lines to\n{}".format(len(lines), filepath)
+    print "\nWrote {} lines to:\n{}".format(len(lines), filepath)
 
 
 # SANITY CHECKS
@@ -223,6 +242,7 @@ def check_no_bogus_categorizations(categorizations, lines):
             print [categorized_line]
             raise Exception("Bogus categorized line: '{}'".format(categorized_line))
 
+
 # TEXT PROCESSING
 
 def substring_match(line_str, candidate_substrings):
@@ -239,6 +259,17 @@ def substring_match(line_str, candidate_substrings):
     if re.match(expr.lower(), line_str.lower()):
         return True
     return False
+
+
+def get_matching_category(line_str):
+    """
+    Return the first category (if any) where one of its keywords is
+    a subtring of `line_str`, None otherwise
+    """
+    for category, keywords in terms.iteritems():
+        if substring_match(line_str, keywords):
+            return category
+    return None
 
 
 def get_amt(line):
