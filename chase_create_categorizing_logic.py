@@ -9,7 +9,7 @@ Input: a clean tsv file of chase tx lines, as exported by `chase_extract_tx.py`
 Workflow:
 
 1. Finding candidate keywords "distributions":
-- make sure `per_line_query` empty
+- make sure `per_line_query` is empty
 - uncomment one of the two `print_distribution` lines and run script
 - choose a promising term showing up in a frequently occuring desciption
 - set the term as the value for `per_line_query` and run script
@@ -19,10 +19,10 @@ Workflow:
 - run script (which will export a `remaining_lines.tsv` file)
 - paste the exported file contents into google sheets
 - categorize additional transactions manually in google sheets
-- copy contents from google sheets and replace contents of `new_manually_categorized.tsv`
+- copy contents from google sheets and replace contents of `new_categorized_tx.txt`
 - repeat
 
-Manual categorizations from previous loop iterations are maintaed in `old_manually_categorized.tsv`
+Manual categorizations from previous loop iterations are maintaed in `old_categorizations.tsv`
 
 Once there are no more `remaining_lines.tsv` you can move to the final export step.
 """
@@ -36,17 +36,17 @@ from chase_extract_tx import convert_to_tsv
 # terms with spaces are deliberate so as to minimize false positives
 # terms with substrinfs of read words are meant to capture variations on a word
 terms = {
-    'canceled_out': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT"],
+    'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
 
     # flight, train, uber, other transport
-    'FL': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
+    'F': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
     'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
-    'UB': ["uber", "limebike", "LYFT", "BIRD", ],
-    'OT': ["PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
+    'UB': ["uber", "LYFT"],
+    'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
 
     # housing, activity
     'H': ["AIRBNB", "hotel"],
-    'A': ["VIATOR"],
+    'A': ["VIATOR"], # visas go in here too
 
     # coffee, restaurant, booze, store
     'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
@@ -59,13 +59,18 @@ terms = {
            "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
     'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
 
-    # entertainment (gifts-books-games), body (clothes-hair-spa),
-    # vpn-spotify-website-phone, language-course
+    # entertainment (gifts-books-games)
     'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
+    # body (clothes-hair-spa),
     'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
+    # digital (vpn-spotify-website-phone)
     'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
-    'LNG': ["CZLT.CZ"],
-    '?' : [] # other
+    'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
+    'MOV': [], # moving
+    'HLT': [], # insurance, doctors, etc
+    'HMM': [], # sketchy shit
+    'I': [], # unknown small charge, ignore
+    '?' : [] # unknown, return to later
 }
 
 def main():
@@ -80,7 +85,7 @@ def main():
     categorizations = load_new_categorized_tx(new_categorized_tx_path)
 
     old_categorizations_path = os.path.abspath(BASE_FOLDER + "old_categorizations.tsv")
-    update_with_old_categorizations(categorizations, old_categorizations_path)
+    # update_with_old_categorizations(categorizations, old_categorizations_path)
 
     lines = load_all_tx_lines()
     for line in lines:
@@ -103,8 +108,8 @@ def main():
             print line
 
 
-    if not per_line_query: # if not searching for a specific term, print distribution
-        print_distribution(get_desc_distribution(remaining_lines, all_terms))
+    # if not per_line_query: # if not searching for a specific term, print distribution
+    #     print_distribution(get_desc_distribution(remaining_lines, all_terms))
         # print_distribution(get_word_distribution(remaining_lines, all_terms))
 
     print "\nTotal lines: {}".format(len(lines))
@@ -128,11 +133,13 @@ def load_new_categorized_tx(filepath):
     lines = load_from_file(filepath)
     categorizations = {}
     for line in lines:
-        category = line.split(" ")[-1] # fourth column is empty if there's no manual category
+        category = line.split("\t")[-1] # fourth column is empty if there's no manual category
         if not category:
             continue
-        desc = " ".join(line.split(" ")[1:-1])
+        if category not in terms:
+            raise Exception("Bad category '{}' in '{}'".format(category, line))
 
+        desc = line.split("\t")[1]
         if desc not in categorizations:
             categorizations[desc] = category
 

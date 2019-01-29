@@ -25,7 +25,7 @@ Added as a sanity check:
 import re
 import os
 
-BASE_FOLDER = "/Users/mirek/temp/"
+BASE_FOLDER = "/Users/mirek/chase_extract_data/"
 
 def main():
     run_for_name_prefix("mirek")
