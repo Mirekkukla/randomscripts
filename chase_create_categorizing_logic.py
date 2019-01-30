@@ -123,7 +123,7 @@ def main():
     print "Remaining: {}\n".format(len(uncategorized_lines))
 
     # export remaining lines into TSV which will get copy-pasted to google sheets and manually populated
-    uncategorized_lines_filepath = os.path.join(utils.BASE_FOLDER_PATH, UNCATEGORIZED_LINES_FILENAME)
+    uncategorized_lines_filepath = os.path.join(utils.get_base_folder_path(), UNCATEGORIZED_LINES_FILENAME)
     if uncategorized_lines:
         utils.write_to_file(uncategorized_lines, uncategorized_lines_filepath)
     else:

@@ -27,14 +27,14 @@ import re
 import os
 import chase_utils as utils
 
-RAW_DATA_FOLDER_PATH = os.path.join(utils.BASE_FOLDER_PATH, "raw_data")
+RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 
 def main():
-    utils.optionally_create_dir(utils.EXTRACTED_TX_FOLDER_PATH)
+    utils.optionally_create_dir(utils.get_extracted_tx_folder_path())
 
     # visually sanity check the raw data: grep -n "Payment Due Date" soph_2018_raw.txt
     # you should see 1-2 dates for each month (depending on statement format)
-    for raw_filename in utils.RAW_FILENAMES:
+    for raw_filename in utils.get_raw_filenames():
         raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
         print "Running for '{}'".format(raw_filepath)
 
@@ -45,13 +45,9 @@ def main():
         tab_delimited_matches = convert_to_tsv(matches)
 
         extracted_filename = utils.get_extracted_tx_filename(raw_filename)
-        extracted_filepath = os.path.join(utils.EXTRACTED_TX_FOLDER_PATH, extracted_filename)
+        extracted_filepath = os.path.join(utils.get_extracted_tx_folder_path(), extracted_filename)
         write_to_file(tab_delimited_matches, extracted_filepath)
 
-
-def get_raw_filepaths(): # move to raw?
-    filenames = ["mirek_2018_raw.txt", "soph_2018_raw.txt"]
-    return [os.path.join(RAW_DATA_FOLDER_PATH, name) for name in filenames]
 
 def extract_tx_lines(file_to_read):
     lines = None
@@ -117,4 +113,6 @@ def write_to_file(matches, file_to_write):
 
 
 if __name__ == '__main__':
+    if utils.OP_MODE != utils.OperatingMode.CHASE_CREDIT:
+        raise Exception("Can only run in chase credit mode")
     main()

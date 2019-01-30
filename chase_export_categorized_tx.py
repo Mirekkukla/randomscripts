@@ -50,7 +50,7 @@ def export(include_manually_categorized=True):
     if not include_manually_categorized:
         filename = filename.replace(".tsv", "_without_manually_categorized.tsv")
 
-    final_list_filepath = os.path.join(utils.BASE_FOLDER_PATH, filename)
+    final_list_filepath = os.path.join(utils.get_base_folder_path(), filename)
     print "Writing {} fully categorized tx to: \n{}".format(len(final_lines), final_list_filepath)
     utils.write_to_file(final_lines, final_list_filepath)
 
