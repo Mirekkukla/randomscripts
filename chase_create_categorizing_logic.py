@@ -37,51 +37,67 @@ import chase_load_manual_categorized
 
 # terms with spaces are deliberate so as to minimize false positives
 # terms with substrinfs of read words are meant to capture variations on a word
+# terms = {
+#     'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
+
+#     # flight, train, uber, other transport
+#     'F': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
+#     'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
+#     'UB': ["uber", "LYFT"],
+#     'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
+
+#     # housing, activities
+#     'H': ["AIRBNB", "hotel"],
+#     'A': ["VIATOR"], # visas go in here too
+
+#     # coffee, restaurant, booze, store
+#     'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
+#     'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
+#           "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
+#           "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
+#           "PHO", "pizz", "REST", "TAVERN"],
+#     'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
+#           "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
+#           "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
+#     'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
+
+#     # entertainment (gifts-books-games)
+#     'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
+#     # body (clothes-hair-spa),
+#     'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
+#     # digital (vpn-spotify-website-phone)
+#     'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
+
+#     # misc
+#     'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
+#     'MOV': [], # moving
+#     'HLT': [], # insurance, doctors, etc
+#     'HMM': [], # sketchy shit
+#     'I': [] # unknown small charge, ignore
+# }
+
 terms = {
-    'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
+    'CNC': ["CHASE CREDIT CRD AUTOPAY", "SCHWAB", "DEPOSIT", "TRANSFER", "TAX", "CHECK_DEPOSIT",
+            "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY", "C PAYROLL"],
+    'ATM': ["ATM", "CHECK_PAID"],
+    'MOV': ["WIRE FEE", "Pacific Gas"],
+    'FEE': ["ATM FEE", "ADJUSTMENT FEE", "SERVICE FEE", "COUNTER CHECK"],
+    'SQR': ["SQC*", "VENMO", "payment from SUZANNE", "payment to Mom", "payment to Suzy"],
+    'F': ["NORWEGIAN", "EXPEDIA"],
+    'HMM': ["PIZTUZTIYA"],
+    'TRN': ["RAIL"],
 
-    # flight, train, uber, other transport
-    'F': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
-    'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
-    'UB': ["uber", "LYFT"],
-    'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
-
-    # housing, activities
-    'H': ["AIRBNB", "hotel"],
-    'A': ["VIATOR"], # visas go in here too
-
-    # coffee, restaurant, booze, store
-    'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
-    'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
-          "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
-          "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
-          "PHO", "pizz", "REST", "TAVERN"],
-    'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
-          "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
-          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
-    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
-
-    # entertainment (gifts-books-games)
-    'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
-    # body (clothes-hair-spa),
-    'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
-    # digital (vpn-spotify-website-phone)
-    'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
-
-    # misc
-    'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
-    'MOV': [], # moving
-    'HLT': [], # insurance, doctors, etc
-    'HMM': [], # sketchy shit
-    'I': [] # unknown small charge, ignore
 }
+
+# MODIFY THIS WHILE ITERATING
+# (We'll print out all un-categorized lines that match it)
+PER_LINE_QUERY = "rail"
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
 
 def main():
     check_categories_in_sync()
 
-    per_line_query = None
     uncategorized_lines = []
     match_count = 0
     categorized_count = 0
@@ -105,16 +121,14 @@ def main():
 
         uncategorized_lines.append(line)
 
-        per_line_query = "" # searching for a specific candidate term
-        if per_line_query and substring_match(line, [per_line_query]):
+        if PER_LINE_QUERY and substring_match(line, [PER_LINE_QUERY]):
             print line
 
-
     # if not searching for a specific term, print distribution of remaining lines
-    if not per_line_query and uncategorized_lines:
+    if not PER_LINE_QUERY and uncategorized_lines:
         all_terms = reduce(lambda l1, l2: l1 + l2, terms.values())
         print_distribution(get_desc_distribution(uncategorized_lines, all_terms))
-        print_distribution(get_word_distribution(uncategorized_lines, all_terms))
+        # print_distribution(get_word_distribution(uncategorized_lines, all_terms))
 
     print "Total lines processed: {}".format(len(lines))
     print "Total categorized: {}".format(categorized_count + match_count)
@@ -135,13 +149,18 @@ def main():
 
 # TEXT PROCESSING
 
-def substring_match(line_str, candidate_substrings):
+def substring_match(line_str, naive_candidate_substrings):
     """
     Return true iff one of the strings in the `candidate_substrings` array is
     a subtring of `line_str`. Matches are considered on a case-insensitive basis
     """
-    if not isinstance(candidate_substrings, list):
+    if not isinstance(naive_candidate_substrings, list):
         raise Exception("Didn't pass an array")
+
+    # careful to not filter everything if the given candidate substring list is e.g ["blah", ""]
+    candidate_substrings = [s for s in naive_candidate_substrings if s]
+    if not candidate_substrings:
+        return False
 
     expr = ".*({}).*".format("|".join(candidate_substrings))
     # note that it'd be more efficient to use re.compile() to compile each regex
@@ -172,7 +191,7 @@ def get_desc_distribution(lines, terms_to_filter_out):
     for line in lines:
         if substring_match(line, terms_to_filter_out):
             continue
-        desc = line.split("\t")[1]
+        desc = utils.get_description(line)
         if desc not in desc_count:
             desc_count[desc] = 0
         desc_count[desc] += 1
@@ -184,7 +203,7 @@ def get_word_distribution(lines, terms_to_filter_out):
     for line in lines:
         if substring_match(line, terms_to_filter_out):
             continue
-        desc = line.split("\t")[1]
+        desc = utils.get_description(line)
         for word in desc.split(" "):
             if word not in word_count:
                 word_count[word] = 0
@@ -200,11 +219,13 @@ def print_distribution(occurance_count_by_desc):
 
 
 def check_categories_in_sync():
+    #TEMPTEMPTMEPMTPEMTPEMTPMEPTMEPTMPEMTPTMTE
+    return
     """ Make sure the category names listed here and in utils are in sync """
     for term_category in terms:
-        if term_category not in utils.CATEGORIES:
+        if term_category not in utils.get_categories():
             raise Exception("Category '{}' missing in utils".format(term_category))
-    for util_category in utils.CATEGORIES:
+    for util_category in utils.get_categories():
         if util_category not in terms:
             raise Exception("Category '{}' missing in terms".format(util_category))
 

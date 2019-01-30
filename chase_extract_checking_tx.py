@@ -8,11 +8,9 @@
 # Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #
 # DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
 
-
-import re
+import datetime
 import os
 import chase_utils as utils
-import datetime
 
 RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 
@@ -27,8 +25,6 @@ def main():
         filtered_raw_lines = filter_tx_lines(raw_lines_with_header[1:])
 
         sorted_tsv_lines = convert_to_sorted_tsv(filtered_raw_lines)
-        print "\n".join(sorted_tsv_lines)
-
         extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
         write_to_file(sorted_tsv_lines, extracted_filepath)
 
@@ -53,9 +49,20 @@ def convert_to_sorted_tsv(lines):
     # Recal file format:
     # # Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #
     # DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
+    # WARNING: commas might be insicde the description, which is in quotes
     tsv_lines = []
     for line in lines:
-        tsv_line = line.replace(",", "\t")
+        if not len(line.split('"')) == 3:
+            raise Exception("Line has more than 3 quotes: '{}'".format(line))
+
+        pre_comment_str = line.split('"')[0]
+        comment_str = '"' + line.split('"')[1] + '"' # we want to preserve the quotes
+        post_comment_str = line.split('"')[-1]
+
+        fixed_pre_comment_str = pre_comment_str.replace(",", "\t")
+        fixed_post_comment_str = post_comment_str.replace(",", "\t")
+
+        tsv_line = fixed_pre_comment_str + comment_str + fixed_post_comment_str
         tsv_lines.append(tsv_line)
 
     tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[1], '%m/%d/%Y'))
