@@ -17,6 +17,13 @@ FINAL_CATEGORIZED_FILENAME = "final_categorized_tx.tsv"
 
 
 def main():
+    export()
+
+
+def export(include_manually_categorized=True):
+    if not include_manually_categorized:
+        print "WARNING: ignoring manually categorized, this should be used to debug\n"
+
     final_lines = []
     lines = utils.load_all_tx_lines()
     categorizations = manual_category_logic.safely_get_manual_categorizations(lines)
@@ -24,8 +31,9 @@ def main():
 
         # manual categorizations
         if line in categorizations:
-            final_line = line + '\t' + categorizations[line]
-            final_lines.append(final_line)
+            if include_manually_categorized:
+                final_line = line + '\t' + categorizations[line]
+                final_lines.append(final_line)
             continue
 
         # programatic categorization
@@ -38,7 +46,11 @@ def main():
 
     utils.check_tsv_tx_format(final_lines, True)
 
-    final_list_filepath = os.path.join(utils.BASE_FOLDER_PATH, FINAL_CATEGORIZED_FILENAME)
+    filename = FINAL_CATEGORIZED_FILENAME
+    if not include_manually_categorized:
+        filename = filename.replace(".tsv", "_without_manually_categorized.tsv")
+
+    final_list_filepath = os.path.join(utils.BASE_FOLDER_PATH, filename)
     print "Writing {} fully categorized tx to: \n{}".format(len(final_lines), final_list_filepath)
     utils.write_to_file(final_lines, final_list_filepath)
 

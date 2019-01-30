@@ -33,6 +33,8 @@ import re
 import chase_utils as utils
 import chase_load_manual_categorized
 
+# TODO: randomize and check for multiple matches
+
 # terms with spaces are deliberate so as to minimize false positives
 # terms with substrinfs of read words are meant to capture variations on a word
 terms = {
@@ -57,7 +59,7 @@ terms = {
     'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
           "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
           "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
-    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
+    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
 
     # entertainment (gifts-books-games)
     'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
@@ -131,15 +133,6 @@ def main():
             os.remove(uncategorized_lines_filepath)
 
 
-def check_categories_in_sync():
-    """ Make sure the category names listed here and in utils are in sync """
-    for term_category in terms:
-        if term_category not in utils.CATEGORIES:
-            raise Exception("Category '{}' missing in utils".format(term_category))
-    for util_category in utils.CATEGORIES:
-        if util_category not in terms:
-            raise Exception("Category '{}' missing in terms".format(util_category))
-
 # TEXT PROCESSING
 
 def substring_match(line_str, candidate_substrings):
@@ -163,7 +156,10 @@ def get_matching_category(line_str):
     Return the first category (if any) where one of its keywords is
     a subtring of `line_str`, None otherwise
     """
+    check_categories_in_sync() # called externtall, so gotta sync first
     for category, keywords in terms.iteritems():
+        if not keywords:
+            continue
         if substring_match(line_str, keywords):
             return category
     return None
@@ -201,6 +197,16 @@ def print_distribution(occurance_count_by_desc):
     for desc, count in sorted(occurance_count_by_desc.iteritems(), key=lambda (k, v): v):
         if count >= 3:
             print "{}: {}".format(desc, count)
+
+
+def check_categories_in_sync():
+    """ Make sure the category names listed here and in utils are in sync """
+    for term_category in terms:
+        if term_category not in utils.CATEGORIES:
+            raise Exception("Category '{}' missing in utils".format(term_category))
+    for util_category in utils.CATEGORIES:
+        if util_category not in terms:
+            raise Exception("Category '{}' missing in terms".format(util_category))
 
 
 if __name__ == "__main__":
