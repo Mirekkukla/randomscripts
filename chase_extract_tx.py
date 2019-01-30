@@ -40,13 +40,11 @@ def main():
 
         raw_matches = extract_tx_lines(raw_filepath)
         matches = filter_leading_tx_lines(raw_matches)
-        print "\n".join(matches)
-
         tab_delimited_matches = convert_to_tsv(matches)
 
-        extracted_filename = utils.get_extracted_tx_filename(raw_filename)
-        extracted_filepath = os.path.join(utils.get_extracted_tx_folder_path(), extracted_filename)
+        extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
         write_to_file(tab_delimited_matches, extracted_filepath)
+        print ""
 
 
 def extract_tx_lines(file_to_read):
@@ -66,22 +64,25 @@ def extract_tx_lines(file_to_read):
 
 def filter_leading_tx_lines(lines):
     """
-    HACK: we want to ignore all tx <= 2/15 (2018), but the tx data
-    starts on 12/08 (2018). Since tx rows don't have a date, we'll need
-    to do some hackery to remove the leading stuff
+    HACK: we want to ignore all tx prior to the `FIRST_TX_DATE`. Since the tx data
+    starts might start on the prior year, and since tx rows don't have a year listed,
+    we'll need to do some hackery to remove the leading transactions. This is fragile
+    and might need to be updated for future datasets.
 
     This logic depends on the given lines being chronological
     Returns the "filtered" list of tx lines
     """
-    print "Removing leading tx prior to 2/15/18"
+    first_tx_date_yearless = utils.FIRST_TX_DATE.strftime("%m/%d")
+    print "Removing leading tx prior to {}".format(first_tx_date_yearless)
     for i, line in enumerate(lines):
 
-        # more hackery: the "payment" line comes before the 12/15/18 txs
+        # more hackery: "payment" transactions aren't listed chronologically
+        # and might thus trip up are "cutover date" logic
         if "AUTOMATIC PAYMENT" in line:
             continue
 
         date_str = line.split(" ")[0] # "MM/DD"
-        if date_str >= "02/15" and date_str <= "12/00":
+        if date_str >= first_tx_date_yearless and date_str <= "12/00":
             print "Removed {} tx\n".format(i)
             return lines[i:]
         print "Nuking " + line

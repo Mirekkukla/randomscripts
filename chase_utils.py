@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 
@@ -5,8 +6,11 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
     CHASE_CREDIT = 1
     CHASE_CHECKING = 2
 
-# MODIFY THIS DEPENDING ON WHAT YOU'RE DOING
-OP_MODE = OperatingMode.CHASE_CREDIT
+# MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
+OP_MODE = OperatingMode.CHASE_CHECKING
+
+FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
+LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
 
 # needs to live here so that there's not a circular dependency between
 # "create categorization logic" and "load manual categorizations" files
@@ -33,11 +37,17 @@ def get_raw_filenames():
     return files_by_mode[OP_MODE]
 
 
-# TODO: change to file path?
-def get_extracted_tx_filename(raw_filename):
-    if "raw.txt" not in raw_filename:
+def get_extracted_tx_filepath(raw_filename):
+    raw_suffix_by_mode = {
+        OperatingMode.CHASE_CREDIT: "raw.txt",
+        OperatingMode.CHASE_CHECKING: "raw.csv"
+    }
+    raw_suffix = raw_suffix_by_mode[OP_MODE]
+    if raw_suffix not in raw_filename:
         raise Exception("Bad raw filename: '{}'".format(raw_filename))
-    return raw_filename.replace("raw.txt", "tx.tsv")
+
+    tx_filename = raw_filename.replace(raw_suffix, "tx.tsv")
+    return os.path.join(get_extracted_tx_folder_path(), tx_filename)
 
 
 # GENERIC FILE STUFF
@@ -73,8 +83,7 @@ def load_all_tx_lines():
     print "Loading all extracted tx lines"
     lines = []
     for raw_filename in get_raw_filenames():
-        tx_filename = get_extracted_tx_filename(raw_filename)
-        filepath_to_read = os.path.join(get_extracted_tx_folder_path(), tx_filename)
+        filepath_to_read = get_extracted_tx_filepath(raw_filename)
         lines += load_from_file(filepath_to_read)
 
     if not lines:

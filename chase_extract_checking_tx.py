@@ -3,89 +3,63 @@
 # beyond that, we'll extract dates and descriptions from the pdfs, but have to enter the transaction amounts manually
 
 
+
+# File has a header. Example first two lines:
+# Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #
+# DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
+
+
 import re
 import os
 import chase_utils as utils
+import datetime
 
 RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 
 def main():
     utils.optionally_create_dir(utils.get_extracted_tx_folder_path())
 
-    # visually sanity check the raw data: grep -n "Payment Due Date" soph_2018_raw.txt
-    # you should see 1-2 dates for each month (depending on statement format)
     for raw_filename in utils.get_raw_filenames():
         raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
         print "Running for '{}'".format(raw_filepath)
 
-        raw_matches = extract_tx_lines(raw_filepath)
-        matches = filter_leading_tx_lines(raw_matches)
-        print "\n".join(matches)
+        raw_lines_with_header = utils.load_from_file(raw_filepath)
+        filtered_raw_lines = filter_tx_lines(raw_lines_with_header[1:])
 
-        tab_delimited_matches = convert_to_tsv(matches)
+        sorted_tsv_lines = convert_to_sorted_tsv(filtered_raw_lines)
+        print "\n".join(sorted_tsv_lines)
 
-        extracted_filename = utils.get_extracted_tx_filename(raw_filename)
-        extracted_filepath = os.path.join(utils.get_extracted_tx_folder_path(), extracted_filename)
-        write_to_file(tab_delimited_matches, extracted_filepath)
+        extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
+        write_to_file(sorted_tsv_lines, extracted_filepath)
 
 
-def get_raw_filepaths(): # move to raw?
-    filenames = ["mirek_2018_raw.txt", "soph_2018_raw.txt"]
-    return [os.path.join(RAW_DATA_FOLDER_PATH, name) for name in filenames]
+def filter_tx_lines(raw_lines):
+    """ Remove tx outside of our desired date interval. Return filtered list """
+    filtered_lines = []
+    for line in raw_lines:
+        date_str = line.split(",")[1] # "MM/DD/YYYY"
+        date = datetime.datetime.strptime(date_str, '%m/%d/%Y')
+        if date >= utils.FIRST_TX_DATE and date <= utils.LAST_TX_DATE:
+            filtered_lines.append(line)
+        else:
+            print "Nuking {}".format(line)
 
-def extract_tx_lines(file_to_read):
-    lines = None
-    with open(file_to_read, "r") as f_read:
-        lines = f_read.read().splitlines()
+    total_removed = len(raw_lines) - len(filtered_lines)
+    print "Removed {} transactions".format(total_removed)
+    return filtered_lines
 
-    matches = []
+
+def convert_to_sorted_tsv(lines):
+    # Recal file format:
+    # # Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #
+    # DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
+    tsv_lines = []
     for line in lines:
-        exp = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
-        if re.match(exp, line):
-            matches.append(line)
-            continue
+        tsv_line = line.replace(",", "\t")
+        tsv_lines.append(tsv_line)
 
-    return matches
-
-
-def filter_leading_tx_lines(lines):
-    """
-    HACK: we want to ignore all tx <= 2/15 (2018), but the tx data
-    starts on 12/08 (2018). Since tx rows don't have a date, we'll need
-    to do some hackery to remove the leading stuff
-
-    This logic depends on the given lines being chronological
-    Returns the "filtered" list of tx lines
-    """
-    print "Removing leading tx prior to 2/15/18"
-    for i, line in enumerate(lines):
-
-        # more hackery: the "payment" line comes before the 12/15/18 txs
-        if "AUTOMATIC PAYMENT" in line:
-            continue
-
-        date_str = line.split(" ")[0] # "MM/DD"
-        if date_str >= "02/15" and date_str <= "12/00":
-            print "Removed {} tx\n".format(i)
-            return lines[i:]
-        print "Nuking " + line
-
-    print "Nothing to filter\n"
-    return []
-
-
-def convert_to_tsv(matches):
-    clean_lines = []
-    for line in matches:
-        split_on_space = line.split(" ")
-        date = split_on_space[0]
-        desc = " ".join(split_on_space[1:-1])
-        amt = split_on_space[-1]
-
-        clean_line = "{}\t{}\t{}".format(date, desc, amt)
-        clean_lines.append(clean_line)
-
-    return clean_lines
+    tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[1], '%m/%d/%Y'))
+    return tsv_lines
 
 
 def write_to_file(matches, file_to_write):
