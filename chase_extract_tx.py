@@ -34,7 +34,7 @@ def main():
 
     # visually sanity check the raw data: grep -n "Payment Due Date" soph_2018_raw.txt
     # you should see 1-2 dates for each month (depending on statement format)
-    for raw_filename in utils.get_raw_filenames():
+    for raw_filename in utils.RAW_FILENAMES:
         raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
         print "Running for '{}'".format(raw_filepath)
 
@@ -59,25 +59,13 @@ def extract_tx_lines(file_to_read):
         lines = f_read.read().splitlines()
 
     matches = []
-    # exp = get_tx_line_extraction_regex()
-    # exp = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
-    exp = r'^[0-9]{2}/[0-9]{2}.*'
     for line in lines:
+        exp = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
         if re.match(exp, line):
             matches.append(line)
             continue
 
     return matches
-
-
-# def get_tx_line_extraction_regex():
-#     if utils.CURRENT_OPERATING_MODE == utils.OperatingMode.CHASE_CREDIT:
-#         return r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
-#     elif utils.CURRENT_OPERATING_MODE == utils.OperatingMode.CHASE_CHECKING:
-#         number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}'
-#         return r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
-
-    raise Exception("Unknown operating mode '{}'".format(utils.CURRENT_OPERATING_MODE))
 
 
 def filter_leading_tx_lines(lines):
@@ -97,7 +85,7 @@ def filter_leading_tx_lines(lines):
             continue
 
         date_str = line.split(" ")[0] # "MM/DD"
-        if date_str > "02/15" and date_str <= "12/00":
+        if date_str >= "02/15" and date_str <= "12/00":
             print "Removed {} tx\n".format(i)
             return lines[i:]
         print "Nuking " + line

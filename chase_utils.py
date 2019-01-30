@@ -1,31 +1,19 @@
+
+
+
 import os
 import re
-from enum import Enum
 
 
-# needs to live here so that there's not a circular dependency between the
-# "create categorization logic" file and "load manual categorizations" file
+# needs to live here so that there's not a circular dependency between
+# "create categorization logic" and "load manual categorizations" files
 CATEGORIES = ['A', 'C', 'B', 'E', 'F', 'I', 'H', 'DIG', 'TR', 'MOV', 'HMM', 'S', 'R', 'HLT', 'CNC', 'EDU', 'OT', 'BDY', 'UB']
 
-# TODO: change to depend
-BASE_FOLDER_PATH = os.path.abspath("/Users/mirek/chase_checking_extract_data/")
+BASE_FOLDER_PATH = os.path.abspath("/Users/mirek/chase_extract_data/")
 EXTRACTED_TX_FOLDER_PATH = os.path.join(BASE_FOLDER_PATH, "extracted_data")
 MANUALLY_CATEGORIZED_TX_FOLDER_PATH = os.path.join(BASE_FOLDER_PATH, "manually_categorized_data")
 
-class OperatingMode(object): #pylint: disable=too-few-public-methods
-    CHASE_CREDIT = 1
-    CHASE_CHECKING = 2
-
-# MODIFY THIS DEPENDING ON WHAT YOU'RE DOING
-CURRENT_OPERATING_MODE = OperatingMode.CHASE_CHECKING
-
-def get_raw_filenames():
-    if CURRENT_OPERATING_MODE == OperatingMode.CHASE_CREDIT:
-        return ["mirek_2018_raw.txt", "soph_2018_raw.txt"]
-    elif CURRENT_OPERATING_MODE == OperatingMode.CHASE_CHECKING:
-        return ["mirek_checking_2018_raw.txt", "soph_checking_2018_raw.txt"]
-    else:
-        raise Exception("Unknown operating mode '{}'".format(CURRENT_OPERATING_MODE))
+RAW_FILENAMES = ["mirek_2018_raw.txt", "soph_2018_raw.txt"]
 
 # TODO: change to file path?
 def get_extracted_tx_filename(raw_filename):
@@ -66,7 +54,7 @@ def write_to_file(lines, filepath):
 def load_all_tx_lines():
     print "Loading all extracted tx lines"
     lines = []
-    for raw_filename in get_raw_filenames():
+    for raw_filename in RAW_FILENAMES:
         tx_filename = get_extracted_tx_filename(raw_filename)
         filepath_to_read = os.path.join(EXTRACTED_TX_FOLDER_PATH, tx_filename)
         lines += load_from_file(filepath_to_read)
