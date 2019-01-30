@@ -12,10 +12,74 @@ OP_MODE = OperatingMode.CHASE_CHECKING
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
 
-# needs to live here so that there's not a circular dependency between
-# "create categorization logic" and "load manual categorizations" files
-def get_categories():
-    return ['A', 'C', 'B', 'E', 'F', 'I', 'H', 'DIG', 'TR', 'MOV', 'HMM', 'S', 'R', 'HLT', 'CNC', 'EDU', 'OT', 'BDY', 'UB', 'ATM', 'SQR', 'FEE']
+# TODO: randomize and check for multiple matches
+
+# terms with spaces are deliberate so as to minimize false positives
+# terms with substrinfs of read words are meant to capture variations on a word
+credit_terms = {
+    'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
+
+    # flight, train, uber, other transport
+    'F': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
+    'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
+    'UB': ["uber", "LYFT"],
+    'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
+
+    # housing, activities
+    'H': ["AIRBNB", "hotel"],
+    'A': ["VIATOR"], # visas go in here too
+
+    # coffee, restaurant, booze, store
+    'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
+    'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
+          "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
+          "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
+          "PHO", "pizz", "REST", "TAVERN"],
+    'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
+          "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
+          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
+    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
+
+    # entertainment (gifts-books-games)
+    'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
+    # body (clothes-hair-spa),
+    'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
+    # digital (vpn-spotify-website-phone)
+    'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
+
+    # misc
+    'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
+    'MOV': [], # moving
+    'HLT': [], # insurance, doctors, etc
+    'HMM': [], # sketchy shit
+    'I': [] # unknown small charge, ignore
+}
+
+checking_terms = {
+    'CNC': ["CHASE CREDIT CRD AUTOPAY", "SCHWAB", "DEPOSIT", "TRANSFER", "TAX", "CHECK_DEPOSIT",
+            "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY", "C PAYROLL"],
+    'ATM': ["ATM", "CHECK_PAID"],
+    'MOV': ["WIRE FEE", "Pacific Gas"],
+    'FEE': ["ATM FEE", "ADJUSTMENT FEE", "SERVICE FEE", "COUNTER CHECK"],
+    'SQR': ["SQC*", "VENMO", "payment from SUZANNE", "payment to Mom", "payment to Suzy"],
+    'F': ["NORWEGIAN", "EXPEDIA"],
+    'HMM': ["PIZTUZTIYA"],
+    'TRN': ["RAIL"],
+
+}
+
+
+def get_terms():
+    terms_by_mode = {
+        OperatingMode.CHASE_CREDIT: credit_terms,
+        OperatingMode.CHASE_CHECKING: checking_terms
+    }
+    return terms_by_mode[OP_MODE]
+
+
+# a category might be in e.g. "checking manual overrides" even if it isn't in "checking terms"
+def get_all_legal_categories():
+    return credit_terms.keys() + checking_terms.keys()
 
 def get_base_folder_path():
     folder_by_mode = {

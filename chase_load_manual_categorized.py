@@ -32,7 +32,7 @@ def load_categorized_tx(filepath):
         category = line.split("\t")[-1]
         if not category:
             raise Exception("No category given: '{}'".format(line))
-        if category not in utils.get_categories():
+        if category not in utils.get_all_legal_categories():
             raise Exception("Bad category '{}' in '{}'".format(category, line))
 
         naked_line = line.rsplit("\t", 1)[0]
