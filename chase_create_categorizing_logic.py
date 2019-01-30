@@ -84,8 +84,10 @@ def main():
     match_count = 0
     categorized_count = 0
 
-    categorizations = chase_load_manual_categorized.safely_get_categorizations()
     lines = utils.load_all_tx_lines()
+    categorizations = chase_load_manual_categorized.safely_get_manual_categorizations(lines)
+
+    print "Categorizing all lines"
     for line in lines:
 
         # skip manual categorizations
@@ -112,13 +114,13 @@ def main():
         print_distribution(get_desc_distribution(uncategorized_lines, all_terms))
         print_distribution(get_word_distribution(uncategorized_lines, all_terms))
 
-    print "\nTotal lines processed: {}".format(len(lines))
+    print "Total lines processed: {}".format(len(lines))
     print "Total categorized: {}".format(categorized_count + match_count)
     print "- Manually categorized: {}".format(categorized_count)
     print "- Matched a term: {}".format(match_count)
     print "Remaining: {}\n".format(len(uncategorized_lines))
 
-    # export remaining lines into TSV which will get copy-paster to google sheets and manually populated
+    # export remaining lines into TSV which will get copy-pasted to google sheets and manually populated
     uncategorized_lines_filepath = os.path.join(utils.BASE_FOLDER_PATH, UNCATEGORIZED_LINES_FILENAME)
     if uncategorized_lines:
         utils.write_to_file(uncategorized_lines, uncategorized_lines_filepath)

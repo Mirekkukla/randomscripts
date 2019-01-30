@@ -9,30 +9,29 @@ MANUALLY_CATEGORIZED_TX_FILENAME = "manually_categorized_tx.tsv"
 
 def main():
     print "RUNNING FROM MAIN: only loads categorizations to sanity check all is well\n"
-    safely_get_categorizations()
+    lines = utils.load_all_tx_lines()
+    safely_get_manual_categorizations(lines)
 
 
-def safely_get_categorizations():
+def safely_get_manual_categorizations(lines):
     manual_tx_path = os.path.join(utils.BASE_FOLDER_PATH, MANUALLY_CATEGORIZED_TX_FILENAME)
     categorizations = load_categorized_tx(manual_tx_path)
-
-    lines = utils.load_all_tx_lines()
     check_no_bogus_categorizations(categorizations, lines)
-
     return categorizations
 
 
 # returns a map from {line (w/o categorizaion) -> categorization}
 def load_categorized_tx(filepath):
+    print "Loading manually categorized tx"
     raw_lines = utils.load_from_file(filepath)
     utils.check_tsv_tx_format(raw_lines, with_category=True)
     lines = fix_gdocs_number_formatting(raw_lines)
 
     categorizations = {}
     for line in lines:
-        category = line.split("\t")[-1] # fourth column is empty if there's no manual category
+        category = line.split("\t")[-1]
         if not category:
-            continue
+            raise Exception("No category given: '{}'".format(line))
         if category not in utils.CATEGORIES:
             raise Exception("Bad category '{}' in '{}'".format(category, line))
 
@@ -66,7 +65,7 @@ def check_no_bogus_categorizations(categorizations, lines):
     lines_as_set = set(lines)
     for categorized_line in categorizations.keys():
         if categorized_line not in lines_as_set:
-            print [categorized_line]
+            print "Split on tab: {}".format(categorized_line.split('\t'))
             raise Exception("Bogus categorized line: '{}'".format(categorized_line))
 
 

@@ -8,67 +8,39 @@ Try to categorize each transaction by examining the description.
 Export the resulting data as a new .tsv file
 """
 
-import chase_create_categorizing_logic as catlogic
+import os
+import chase_create_categorizing_logic as auto_category_logic
+import chase_load_manual_categorized as manual_category_logic
+import chase_utils as utils
+
+FINAL_CATEGORIZED_FILENAME = "final_categorized_tx.tsv"
 
 
 def main():
-   per_line_query = None
-    remaining_lines = []
     final_lines = []
-    match_count = 0
-    categorized_count = 0
-
-    categorizations = cat_logic.safely_get_categorizations()
-
     lines = utils.load_all_tx_lines()
+    categorizations = manual_category_logic.safely_get_manual_categorizations(lines)
     for line in lines:
 
         # manual categorizations
         if line in categorizations:
             final_line = line + '\t' + categorizations[line]
             final_lines.append(final_line)
-            categorized_count += 1
             continue
 
-        # term matching
-        matching_category = get_matching_category(line)
-        if matching_category:
-            final_line = line + '\t' + matching_category
-            final_lines.append(final_line)
-            match_count += 1
-            continue
+        # programatic categorization
+        matching_category = auto_category_logic.get_matching_category(line)
+        if not matching_category:
+            raise Exception("No category given / found for line: '{}'".format(line))
 
-        remaining_lines.append(line)
+        final_line = line + '\t' + matching_category
+        final_lines.append(final_line)
 
-        per_line_query = "" # searching for a specific candidate term
-        if per_line_query and substring_match(line, [per_line_query]):
-            print line
+    utils.check_tsv_tx_format(final_lines, True)
 
-
-    # process final lines
-    if not remaining_lines:
-        final_list_filepath = os.path.join(BASE_FOLDER_PATH, FINAL_CATEGORIZED_FILENAME)
-        print "FULL COVERAGE, writing final list to: \n{}".format(final_list_filepath)
-        utils.check_tsv_tx_format(final_lines, True)
-        write_to_file(final_lines, final_list_filepath)
-
-
-
-
-
-
-
-
-    lines = catlogic.load_lines()
-    print len(lines)
-    # write_to_file(remaining_lines, filepath_to_write)
-
-
-def write_to_file(remaining_lines, filepath_to_write):
-    with open(filepath_to_write, "w") as f:
-        for line in remaining_lines:
-            f.write(line + "\n")
-    print "Wrote {} lines to \n{}".format(len(remaining_lines), filepath_to_write)
+    final_list_filepath = os.path.join(utils.BASE_FOLDER_PATH, FINAL_CATEGORIZED_FILENAME)
+    print "Writing {} fully categorized tx to: \n{}".format(len(final_lines), final_list_filepath)
+    utils.write_to_file(final_lines, final_list_filepath)
 
 
 if __name__ == "__main__":

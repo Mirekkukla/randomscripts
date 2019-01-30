@@ -52,6 +52,7 @@ def write_to_file(lines, filepath):
 # TX-FORMAT SPECIFIC STUFF
 
 def load_all_tx_lines():
+    print "Loading all extracted tx lines"
     lines = []
     for raw_filename in RAW_FILENAMES:
         tx_filename = get_extracted_tx_filename(raw_filename)
@@ -61,7 +62,7 @@ def load_all_tx_lines():
     if not lines:
         raise Exception("Didn't find any tx lines, something is wrong")
 
-    print "Loaded {} total tx lines".format(len(lines))
+    print "Loaded {} total tx lines\n".format(len(lines))
     check_tsv_tx_format(lines)
     return lines
 
