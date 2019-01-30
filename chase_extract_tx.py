@@ -25,23 +25,16 @@ Added as a sanity check:
 
 import re
 import os
+import chase_utils as utils
 
-BASE_FOLDER_PATH = os.path.abspath("/Users/mirek/chase_extract_data/")
-RAW_DATA_FOLDER_PATH = os.path.join(BASE_FOLDER_PATH, "raw_data")
-EXTRACTED_DATA_FOLDER_PATH = os.path.join(BASE_FOLDER_PATH, "extracted_data")
-
+RAW_DATA_FOLDER_PATH = os.path.join(utils.BASE_FOLDER_PATH, "raw_data")
 
 def main():
-
-    for folder_path in [RAW_DATA_FOLDER_PATH, EXTRACTED_DATA_FOLDER_PATH]:
-        if not os.path.exists(folder_path):
-            print "Folder at '{}' doesn't exist, creating it".format(folder_path)
-            os.makedirs(folder_path)
+    utils.optionally_create_dir(utils.EXTRACTED_TX_FOLDER_PATH)
 
     # visually sanity check the raw data: grep -n "Payment Due Date" soph_2018_raw.txt
     # you should see 1-2 dates for each month (depending on statement format)
-    raw_files = ["mirek_2018_raw.txt", "soph_2018_raw.txt"]
-    for raw_filename in raw_files:
+    for raw_filename in utils.RAW_FILENAMES:
         raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
         print "Running for '{}'".format(raw_filepath)
 
@@ -51,10 +44,14 @@ def main():
 
         tab_delimited_matches = convert_to_tsv(matches)
 
-        extracted_filename = raw_filename.replace("raw.txt", "tx.tsv")
-        extracted_filepath = os.path.join(EXTRACTED_DATA_FOLDER_PATH, extracted_filename)
+        extracted_filename = utils.get_extracted_tx_filename(raw_filename)
+        extracted_filepath = os.path.join(utils.EXTRACTED_TX_FOLDER_PATH, extracted_filename)
         write_to_file(tab_delimited_matches, extracted_filepath)
 
+
+def get_raw_filepaths(): # move to raw?
+    filenames = ["mirek_2018_raw.txt", "soph_2018_raw.txt"]
+    return [os.path.join(RAW_DATA_FOLDER_PATH, name) for name in filenames]
 
 def extract_tx_lines(file_to_read):
     lines = None

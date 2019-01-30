@@ -12,6 +12,52 @@ import chase_create_categorizing_logic as catlogic
 
 
 def main():
+   per_line_query = None
+    remaining_lines = []
+    final_lines = []
+    match_count = 0
+    categorized_count = 0
+
+    categorizations = cat_logic.safely_get_categorizations()
+
+    lines = utils.load_all_tx_lines()
+    for line in lines:
+
+        # manual categorizations
+        if line in categorizations:
+            final_line = line + '\t' + categorizations[line]
+            final_lines.append(final_line)
+            categorized_count += 1
+            continue
+
+        # term matching
+        matching_category = get_matching_category(line)
+        if matching_category:
+            final_line = line + '\t' + matching_category
+            final_lines.append(final_line)
+            match_count += 1
+            continue
+
+        remaining_lines.append(line)
+
+        per_line_query = "" # searching for a specific candidate term
+        if per_line_query and substring_match(line, [per_line_query]):
+            print line
+
+
+    # process final lines
+    if not remaining_lines:
+        final_list_filepath = os.path.join(BASE_FOLDER_PATH, FINAL_CATEGORIZED_FILENAME)
+        print "FULL COVERAGE, writing final list to: \n{}".format(final_list_filepath)
+        utils.check_tsv_tx_format(final_lines, True)
+        write_to_file(final_lines, final_list_filepath)
+
+
+
+
+
+
+
 
     lines = catlogic.load_lines()
     print len(lines)
