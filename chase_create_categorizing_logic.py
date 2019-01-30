@@ -64,7 +64,7 @@ terms = {
     'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
     # digital (vpn-spotify-website-phone)
     'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
-    
+
     # misc
     'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
     'MOV': [], # moving

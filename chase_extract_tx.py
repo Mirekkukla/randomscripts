@@ -1,6 +1,7 @@
 """
 Copy and paste the entire contents of chase statmement pdf.
-Extract only those lines that represent transactions and export to tsv new file.
+Extract only those lines that represent transactions ("tx lines")
+and export them to tsv new file.
 
 Exacmple of lines we want to extract:
 10/05 AUTOMATIC PAYMENT - THANK YOU -3,826.72
@@ -13,10 +14,10 @@ Minimum Payment: $25.00
 Previous points balance 193,092
 
 The following observations are important:
-- tx amounts don't have dollar signs, and are always preceded by a space
-- tx amounts might be negative
+- tx line amounts don't have dollar signs, and are always preceded by a space
+- tx line amounts might be negative
 - tx lines allways end in ".XX"
-- tx amounts might be in the thousands (and thus have commas)
+- tx line amounts might be in the thousands (and thus have commas)
 
 Added as a sanity check:
 - tx lines always start with a date "XX/XX"
@@ -25,26 +26,34 @@ Added as a sanity check:
 import re
 import os
 
-BASE_FOLDER = "/Users/mirek/chase_extract_data/"
+BASE_FOLDER_PATH = os.path.abspath("/Users/mirek/chase_extract_data/")
+RAW_DATA_FOLDER_PATH = os.path.join(BASE_FOLDER_PATH, "raw_data")
+EXTRACTED_DATA_FOLDER_PATH = os.path.join(BASE_FOLDER_PATH, "extracted_data")
+
 
 def main():
-    run_for_name_prefix("mirek")
-    run_for_name_prefix("soph")
 
+    for folder_path in [RAW_DATA_FOLDER_PATH, EXTRACTED_DATA_FOLDER_PATH]:
+        if not os.path.exists(folder_path):
+            print "Folder at '{}' doesn't exist, creating it".format(folder_path)
+            os.makedirs(folder_path)
 
-def run_for_name_prefix(prefix):
-    print "Running for '{}'".format(prefix)
-    # sanity check raw data looks right: grep -n "Payment Due Date" soph_2018_raw.txt
-    filepath_to_read = os.path.abspath(BASE_FOLDER + prefix + "_2018_raw.txt")
-    filepath_to_write = os.path.abspath(BASE_FOLDER + prefix + "_2018_tx.tsv")
+    # visually sanity check the raw data: grep -n "Payment Due Date" soph_2018_raw.txt
+    # you should see 1-2 dates for each month (depending on statement format)
+    raw_files = ["mirek_2018_raw.txt", "soph_2018_raw.txt"]
+    for raw_filename in raw_files:
+        raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
+        print "Running for '{}'".format(raw_filepath)
 
-    raw_matches = extract_tx_lines(filepath_to_read)
-    matches = filter_leading_tx_lines(raw_matches)
-    print "\n".join(matches)
+        raw_matches = extract_tx_lines(raw_filepath)
+        matches = filter_leading_tx_lines(raw_matches)
+        print "\n".join(matches)
 
-    tab_delimited_matches = convert_to_tsv(matches)
-    write_to_file(tab_delimited_matches, filepath_to_write)
-    print "Done for {}\n".format(prefix)
+        tab_delimited_matches = convert_to_tsv(matches)
+
+        extracted_filename = raw_filename.replace("raw.txt", "tx.tsv")
+        extracted_filepath = os.path.join(EXTRACTED_DATA_FOLDER_PATH, extracted_filename)
+        write_to_file(tab_delimited_matches, extracted_filepath)
 
 
 def extract_tx_lines(file_to_read):
@@ -73,16 +82,19 @@ def filter_leading_tx_lines(lines):
     """
     print "Removing leading tx prior to 2/15/18"
     for i, line in enumerate(lines):
-        
+
         # more hackery: the "payment" line comes before the 12/15/18 txs
         if "AUTOMATIC PAYMENT" in line:
             continue
 
         date_str = line.split(" ")[0] # "MM/DD"
         if date_str >= "02/15" and date_str <= "12/00":
-            print "Removed {} tx".format(i)
+            print "Removed {} tx\n".format(i)
             return lines[i:]
         print "Nuking " + line
+
+    print "Nothing to filter\n"
+    return []
 
 
 def convert_to_tsv(matches):
