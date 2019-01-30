@@ -4,7 +4,6 @@
 
 import os
 import chase_utils as utils
-from chase_utils import terms # circular depedency?
 
 MANUALLY_CATEGORIZED_TX_FILENAME = "manually_categorized_tx.tsv"
 
@@ -14,8 +13,6 @@ def main():
 
 
 def safely_get_categorizations():
-    utils.optionally_create_dir(utils.MANUALLY_CATEGORIZED_TX_FOLDER_PATH)
-
     manual_tx_path = os.path.join(utils.BASE_FOLDER_PATH, MANUALLY_CATEGORIZED_TX_FILENAME)
     categorizations = load_categorized_tx(manual_tx_path)
 
@@ -36,7 +33,7 @@ def load_categorized_tx(filepath):
         category = line.split("\t")[-1] # fourth column is empty if there's no manual category
         if not category:
             continue
-        if category not in terms:
+        if category not in utils.CATEGORIES:
             raise Exception("Bad category '{}' in '{}'".format(category, line))
 
         naked_line = line.rsplit("\t", 1)[0]

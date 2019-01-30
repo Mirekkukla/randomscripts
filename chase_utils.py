@@ -4,47 +4,10 @@
 import os
 import re
 
-# terms with spaces are deliberate so as to minimize false positives
-# terms with substrinfs of read words are meant to capture variations on a word
-terms = {
-    'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
 
-    # flight, train, uber, other transport
-    'F': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
-    'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
-    'UB': ["uber", "LYFT"],
-    'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
-
-    # housing, activities
-    'H': ["AIRBNB", "hotel"],
-    'A': ["VIATOR"], # visas go in here too
-
-    # coffee, restaurant, booze, store
-    'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
-    'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
-          "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
-          "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
-          "PHO", "pizz", "REST", "TAVERN"],
-    'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
-          "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
-          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
-    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
-
-    # entertainment (gifts-books-games)
-    'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
-    # body (clothes-hair-spa),
-    'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
-    # digital (vpn-spotify-website-phone)
-    'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
-
-    # misc
-    'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
-    'MOV': [], # moving
-    'HLT': [], # insurance, doctors, etc
-    'HMM': [], # sketchy shit
-    'I': [] # unknown small charge, ignore
-}
-
+# needs to live here so that there's not a circular dependency between
+# "create categorization logic" and "load manual categorizations" files
+CATEGORIES = ['A', 'C', 'B', 'E', 'F', 'I', 'H', 'DIG', 'TR', 'MOV', 'HMM', 'S', 'R', 'HLT', 'CNC', 'EDU', 'OT', 'BDY', 'UB']
 
 BASE_FOLDER_PATH = os.path.abspath("/Users/mirek/chase_extract_data/")
 EXTRACTED_TX_FOLDER_PATH = os.path.join(BASE_FOLDER_PATH, "extracted_data")

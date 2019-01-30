@@ -30,23 +30,61 @@ Workflow:
 
 import os
 import re
-from chase_utils import terms
 import chase_utils as utils
 import chase_load_manual_categorized
 
-####TEMPTEMPTEMP: move terms back here from utils
+# terms with spaces are deliberate so as to minimize false positives
+# terms with substrinfs of read words are meant to capture variations on a word
+terms = {
+    'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
+
+    # flight, train, uber, other transport
+    'F': ["airline", "FRONTIER", " air ", "UNITED 0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
+    'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
+    'UB': ["uber", "LYFT"],
+    'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
+
+    # housing, activities
+    'H': ["AIRBNB", "hotel"],
+    'A': ["VIATOR"], # visas go in here too
+
+    # coffee, restaurant, booze, store
+    'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
+    'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
+          "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
+          "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
+          "PHO", "pizz", "REST", "TAVERN"],
+    'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
+          "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
+          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL"],
+    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "GROCERY", "CENTRA", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
+
+    # entertainment (gifts-books-games)
+    'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
+    # body (clothes-hair-spa),
+    'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
+    # digital (vpn-spotify-website-phone)
+    'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
+
+    # misc
+    'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
+    'MOV': [], # moving
+    'HLT': [], # insurance, doctors, etc
+    'HMM': [], # sketchy shit
+    'I': [] # unknown small charge, ignore
+}
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
-FINAL_CATEGORIZED_FILENAME = "final_categorized_tx.tsv"
 
 def main():
+    check_categories_in_sync()
+
     per_line_query = None
     uncategorized_lines = []
     match_count = 0
     categorized_count = 0
 
     categorizations = chase_load_manual_categorized.safely_get_categorizations()
-
     lines = utils.load_all_tx_lines()
     for line in lines:
 
@@ -68,8 +106,9 @@ def main():
             print line
 
 
-    if not per_line_query: # if not searching for a specific term, print distribution
-        all_terms = reduce(lambda l1, l2: l1 + l2, utils.terms.values())
+    # if not searching for a specific term, print distribution of remaining lines
+    if not per_line_query and uncategorized_lines:
+        all_terms = reduce(lambda l1, l2: l1 + l2, terms.values())
         print_distribution(get_desc_distribution(uncategorized_lines, all_terms))
         print_distribution(get_word_distribution(uncategorized_lines, all_terms))
 
@@ -79,16 +118,25 @@ def main():
     print "- Matched a term: {}".format(match_count)
     print "Remaining: {}\n".format(len(uncategorized_lines))
 
-
     # export remaining lines into TSV which will get copy-paster to google sheets and manually populated
     uncategorized_lines_filepath = os.path.join(utils.BASE_FOLDER_PATH, UNCATEGORIZED_LINES_FILENAME)
     if uncategorized_lines:
         utils.write_to_file(uncategorized_lines, uncategorized_lines_filepath)
+    else:
+        print "All lines are categorized"
+        if os.path.isfile(uncategorized_lines_filepath):
+            print "Nuking existing file at {}".format(uncategorized_lines_filepath)
+            os.remove(uncategorized_lines_filepath)
 
-    elif os.path.isfile(uncategorized_lines_filepath):
-        print "No lines remain uncategorized, nuking existing file at {}".format(uncategorized_lines_filepath)
-        os.remove(uncategorized_lines_filepath)
 
+def check_categories_in_sync():
+    """ Make sure the category names listed here and in utils are in sync """
+    for term_category in terms:
+        if term_category not in utils.CATEGORIES:
+            raise Exception("Category '{}' missing in utils".format(term_category))
+    for util_category in utils.CATEGORIES:
+        if util_category not in terms:
+            raise Exception("Category '{}' missing in terms".format(util_category))
 
 # TEXT PROCESSING
 
