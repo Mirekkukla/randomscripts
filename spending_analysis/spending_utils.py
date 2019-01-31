@@ -83,7 +83,7 @@ def get_all_legal_categories():
 
 def get_base_folder_path():
     folder_by_mode = {
-        OperatingMode.CHASE_CREDIT: "chase_extract_data",
+        OperatingMode.CHASE_CREDIT: "chase_extract_credit_data",
         OperatingMode.CHASE_CHECKING: "chase_extract_checking_data"
     }
     return os.path.abspath("/Users/mirek/" + folder_by_mode[OP_MODE])
@@ -203,5 +203,5 @@ def tests():
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 
 
-if __name__ == "__main__":
-    tests()
+# Tests run on import
+tests()

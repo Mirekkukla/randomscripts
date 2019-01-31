@@ -48,10 +48,9 @@ def check_no_bogus_categorizations(categorizations, lines):
     lines_as_set = set(lines)
     for categorized_line in categorizations.keys():
         if categorized_line not in lines_as_set:
-            print lines_as_set
             print "Split on tab: {}".format(categorized_line.split('\t'))
             raise Exception("Bogus categorized line: '{}'".format([categorized_line]))
 
 
-# run tests on import
-main()
+if __name__ == '__main__':
+    main()
