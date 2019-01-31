@@ -38,7 +38,7 @@ def main():
         print "Running for '{}'".format(raw_filepath)
 
         raw_lines_with_header = utils.load_from_file(raw_filepath)
-        filtered_raw_lines = filter_tx_lines(raw_lines_with_header[1:])
+        filtered_raw_lines = filter_tx_lines(raw_lines_with_header[4:])
 
         converted_tx_lines = converted_to_tx_format(filtered_raw_lines)
         extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
@@ -50,7 +50,7 @@ def filter_tx_lines(raw_lines):
     print "Dropping tx outside of [{}, {}]".format(utils.FIRST_TX_DATE.date(), utils.LAST_TX_DATE.date())
     filtered_lines = []
     for line in raw_lines:
-        date_str = line.split(",")[1] # "MM/DD/YYYY"
+        date_str = line.split(",")[0].strip('"') # "MM/DD/YYYY"
         date = datetime.datetime.strptime(date_str, '%m/%d/%Y')
         if date >= utils.FIRST_TX_DATE and date <= utils.LAST_TX_DATE:
             filtered_lines.append(line)
@@ -61,30 +61,38 @@ def filter_tx_lines(raw_lines):
     print "Removed {} transactions".format(total_removed)
     return filtered_lines
 
+
 def converted_to_tx_format(lines):
     """
     Input: list of tx lines in the raw format, e.g:
-    'DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,'
+    "01/27/2019","ATM","","CSAS Taboritska 16/24 Praha","$50.17","","$56.26"
 
     Output: list of "tx format" lines ordered by ascending date. Format:
-    '[date]\t[description with no surrounding quotes or outer whitespace]\t[amount]'
+    [date]\t[[type] + [description]]\t[deposit / withdrawal amount with no '$' sign]
+    Where lines don't have the surrounding quotes
 
-    WARNING: there might commas might be inside the quote-surrounded description field
+    WARNING: there might commas might be inside the numeric fields, can't split on ","
     """
     tsv_lines = []
     for line in lines:
-        if not len(line.split('"')) == 3:
-            raise Exception("Line has more than the 2 'description' quotes: '{}'".format(line))
+        separator = '","'
+        num_separators = line.count(separator)
+        if not num_separators == 6:
+            raise Exception("Line has {} separator: [{}]".format(num_separators, line))
 
-        pre_desc_str = line.split('"')[0]
-        desc_str = line.split('"')[1].strip()
-        post_desc_str = line.split('"')[-1]
+        full_tsv_line = line.replace(separator, '\t').strip('"')
 
-        date_str = pre_desc_str.split(",")[1]
-        raw_amount_str = post_desc_str.split(",")[1]
-        flipped_amount_str = raw_amount_str[1:] if raw_amount_str[0] == "-" else "-{}".format(raw_amount_str)
+        date_str = full_tsv_line.split('\t')[0]
+        type_str = full_tsv_line.split('\t')[1]
+        desc_str = full_tsv_line.split('\t')[3]
+        combined_desc_str = "{} + {}".format(type_str, desc_str)
 
-        tsv_line = "{}\t{}\t{}".format(date_str, desc_str, flipped_amount_str)
+        # withdrawals stay positive, deposits need a leading minus sign
+        withdrawal_str = full_tsv_line.split('\t')[4]
+        deposit_str = full_tsv_line.split('\t')[5]
+        amt_str = withdrawal_str[1:] if withdrawal_str else "-" + deposit_str[1:] # remove leading "$"
+
+        tsv_line = "{}\t{}\t{}".format(date_str, combined_desc_str, amt_str)
         tsv_lines.append(tsv_line)
 
     tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[0], '%m/%d/%Y'))
@@ -102,16 +110,16 @@ def write_to_file(matches, file_to_write):
 ### TESTS
 def tests():
     # converting raw lines: check sorting and handling of "extra" commas
-    simple_raw = 'DEBIT,09/07/2018,"SIMPLE DESC",-100.00,ATM,324.17,,'
-    raw_with_comma = 'DEBIT,09/06/2018,"EARLIER DATE, AND COMMA",-100.00,ATM,324.17,,'
-    expected = ['09/06/2018\tEARLIER DATE, AND COMMA\t100.00', '09/07/2018\tSIMPLE DESC\t100.00']
-    converted = converted_to_tx_format([simple_raw, raw_with_comma])
+    raw_withdrawal = '"01/27/2019","ATM","","WITHDRAWL YO","$50.17","","$1,256.26"'
+    raw_deposit = '"01/26/2019","TRANSFER","","EARLIER DEPOSIT YO","","$1,000.00","$1,256.26"'
+    expected = ['01/26/2019\tTRANSFER + EARLIER DEPOSIT YO\t-1,000.00', '01/27/2019\tATM + WITHDRAWL YO\t50.17']
+    converted = converted_to_tx_format([raw_withdrawal, raw_deposit])
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 
 
 if __name__ == '__main__':
-    if utils.OP_MODE != utils.OperatingMode.CHASE_CHECKING:
-        raise Exception("Can only run in chase checking mode")
+    if utils.OP_MODE != utils.OperatingMode.SCHWAB_CHECKING:
+        raise Exception("Can only run in schwab checking mode")
     tests()
     main()

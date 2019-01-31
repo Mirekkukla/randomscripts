@@ -64,10 +64,10 @@ def filter_tx_lines(raw_lines):
 def converted_to_tx_format(lines):
     """
     Input: list of tx lines in the raw format, e.g:
-    'DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,'
+    DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
 
     Output: list of "tx format" lines ordered by ascending date. Format:
-    '[date]\t[description with no surrounding quotes or outer whitespace]\t[amount]'
+    [date]\t[description with no surrounding quotes or outer whitespace]\t[amount]
 
     WARNING: there might commas might be inside the quote-surrounded description field
     """

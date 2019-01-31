@@ -10,10 +10,10 @@ Output: `REMAINING_LINES_FILENAME` tsv file, consisting of lines that don't have
 Workflow:
 
 1. Find keywords that can be used to auto-categorize transactions:
-- make sure `per_line_query` is empty
+- make sure `GREP_QUERY` is empty
 - uncomment one of the two `print_distribution` lines and run script
 - choose a promising term showing up in a frequently occuring desciption
-- set the term as the value for `per_line_query` and run script
+- set the term as the value for `GREP_QUERY` and run script
 - if no false positives show up, add the term to the "terms" dictionary
 
 2. Creating manual overrides (once the term list is pretty fixed):
@@ -35,7 +35,7 @@ import load_manual_categorized_tx
 
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all un-categorized lines that match it)
-PER_LINE_QUERY = ""
+GREP_QUERY = "ACH"
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
 
@@ -63,12 +63,12 @@ def main():
 
         uncategorized_lines.append(line)
 
-        if PER_LINE_QUERY and substring_match(line, [PER_LINE_QUERY]):
+        if GREP_QUERY and substring_match(line, [GREP_QUERY]):
             print line
 
     # if not searching for a specific term, print distribution of remaining lines
-    if not PER_LINE_QUERY and uncategorized_lines:
-        all_terms = reduce(lambda l1, l2: l1 + l2, utils.get_terms().values())
+    if not GREP_QUERY and uncategorized_lines:
+        all_terms = reduce(lambda l1, l2: l1 + l2, utils.get_terms().values(), [])
         print_distribution(get_desc_distribution(uncategorized_lines, all_terms), "Desc distribution")
         print_distribution(get_word_distribution(uncategorized_lines, all_terms), "Word distribution")
 
