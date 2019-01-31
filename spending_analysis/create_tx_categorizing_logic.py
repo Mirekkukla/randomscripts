@@ -30,8 +30,8 @@ Workflow:
 
 import os
 import re
-import chase_utils as utils
-import chase_load_manual_categorized
+import spending_utils as utils
+import load_manual_categorized_tx
 
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all un-categorized lines that match it)
@@ -45,7 +45,7 @@ def main():
     categorized_count = 0
 
     lines = utils.load_all_tx_lines()
-    categorizations = chase_load_manual_categorized.safely_get_manual_categorizations(lines)
+    categorizations = load_manual_categorized_tx.safely_get_manual_categorizations(lines)
 
     print "Categorizing all lines\n"
     for line in lines:

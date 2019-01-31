@@ -7,7 +7,7 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
     CHASE_CHECKING = 2
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
-OP_MODE = OperatingMode.CHASE_CHECKING
+OP_MODE = OperatingMode.CHASE_CREDIT
 
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources

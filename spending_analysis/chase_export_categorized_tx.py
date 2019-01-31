@@ -11,7 +11,7 @@ Export the resulting data as a new .tsv file
 import os
 import create_tx_categorizing_logic as auto_category_logic
 import load_manual_categorized_tx as manual_category_logic
-import chase_utils as utils
+import spending_utils as utils
 
 FINAL_CATEGORIZED_FILENAME = "final_categorized_tx.tsv"
 

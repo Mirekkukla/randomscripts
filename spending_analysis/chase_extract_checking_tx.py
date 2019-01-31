@@ -20,13 +20,13 @@ Cleanup and filtering: we want the converted file to resemble the "chase credit 
 
 Process:
   - export checking transactions as csv from chase website as
-  - set chase_utils.OP_MODE to "OperatingMode.CHASE_CHECKING"
+  - set spending_utils.OP_MODE to "OperatingMode.CHASE_CHECKING"
   - run script
 """
 
 import datetime
 import os
-import chase_utils as utils
+import spending_utils as utils
 
 RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 

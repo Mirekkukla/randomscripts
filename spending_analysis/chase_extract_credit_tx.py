@@ -25,7 +25,7 @@ Added as a sanity check:
 
 import re
 import os
-import chase_utils as utils
+import spending_utils as utils
 
 RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 

@@ -3,7 +3,7 @@
 """
 
 import os
-import chase_utils as utils
+import spending_utils as utils
 
 MANUALLY_CATEGORIZED_TX_FILENAME = "manually_categorized_tx.tsv"
 
