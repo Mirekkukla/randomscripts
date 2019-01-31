@@ -219,12 +219,8 @@ def load_all_tx_lines():
 
 # SANITY CHECKS
 
-def check_tsv_tx_format(lines, with_category=False, mode=OP_MODE):
-    if mode == OperatingMode.CHASE_CREDIT:
-        leading_date_exp = r'^[0-9]{2}/[0-9]{2}' # "DD/MM",
-    else:
-        leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
-
+def check_tsv_tx_format(lines, with_category=False):
+    leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
     number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
     end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
     tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + end_of_line_exp
