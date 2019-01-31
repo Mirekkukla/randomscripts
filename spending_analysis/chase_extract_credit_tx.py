@@ -1,7 +1,10 @@
 """
 Copy and paste the entire contents of chase statmement pdf.
-Extract only those lines that represent transactions ("tx lines")
-and export them to tsv new file.
+Extract only those lines that represent transactions ("tx lines"),
+convert them to a simpler tx format, and export them to tsv new file.
+
+
+EXTRACTION DETAILS:
 
 Exacmple of lines we want to extract:
 10/05 AUTOMATIC PAYMENT - THANK YOU -3,826.72
@@ -21,96 +24,99 @@ The following observations are important:
 
 Added as a sanity check:
 - tx lines always start with a date "XX/XX"
+
+
+EXPORTED FORMAT DETAILS:
+
+The exported lines shouls be tab-delimited and consist of 3 columns:
+[date]\t[description]\t[amount]
+
+The "date" string should be format MM/DD/YYYY (we'll have to infer the year)
+The "description" and "amount" strings should be as given in the raw tx line
 """
 
+import datetime
 import re
 import os
 import spending_utils as utils
 
-RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 
 def main():
-    utils.optionally_create_dir(utils.get_extracted_tx_folder_path())
-
-    # visually sanity check the raw data: grep -n "Payment Due Date" soph_2018_raw.txt
-    # you should see 1-2 dates for each month (depending on statement format)
-    for raw_filename in utils.get_raw_filenames():
-        raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
-        print "Running for '{}'".format(raw_filepath)
-
-        raw_matches = extract_tx_lines(raw_filepath)
-        matches = filter_leading_tx_lines(raw_matches)
-        tab_delimited_matches = convert_to_tsv(matches)
-
-        extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
-        write_to_file(tab_delimited_matches, extracted_filepath)
-        print ""
+    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
+    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
 
 
-def extract_tx_lines(file_to_read):
-    lines = None
-    with open(file_to_read, "r") as f_read:
-        lines = f_read.read().splitlines()
+def converted_to_tx_format(raw_lines_with_tons_of_garbage):
+    start_date = None
+    end_date = None
+    tx_line_regex = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
 
-    matches = []
-    for line in lines:
-        exp = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
-        if re.match(exp, line):
-            matches.append(line)
+    # first we gotta drop all the non-tx garbage and fix the dates
+    raw_tx_lines = []
+    for line in raw_lines_with_tons_of_garbage:
+
+        if "Opening/Closing Date" in line:
+            # e.g. "Opening/Closing Date 12/10/17 - 01/09/18"
+            start_date_str = line.split(" ")[2]
+            end_date_str = line.split(" ")[-1]
+            start_date = datetime.datetime.strptime(start_date_str, '%m/%d/%y')
+            end_date = datetime.datetime.strptime(end_date_str, '%m/%d/%y')
             continue
 
-    return matches
+        if re.match(tx_line_regex, line):
+            fixed_date = get_fixed_date_str(line, start_date, end_date)
+            tx_line = fixed_date + " " + line.split(" ", 1)[1]
+            raw_tx_lines.append(tx_line)
 
-
-def filter_leading_tx_lines(lines):
-    """
-    HACK: we want to ignore all tx prior to the `FIRST_TX_DATE`. Since the tx data
-    starts might start on the prior year, and since tx rows don't have a year listed,
-    we'll need to do some hackery to remove the leading transactions. This is fragile
-    and might need to be updated for future datasets.
-
-    This logic depends on the given lines being chronological
-    Returns the "filtered" list of tx lines
-    """
-    first_tx_date_yearless = utils.FIRST_TX_DATE.strftime("%m/%d")
-    print "Removing leading tx prior to {}".format(first_tx_date_yearless)
-    for i, line in enumerate(lines):
-
-        # more hackery: "payment" transactions aren't listed chronologically
-        # and might thus trip up are "cutover date" logic
-        if "AUTOMATIC PAYMENT" in line:
-            continue
-
-        date_str = line.split(" ")[0] # "MM/DD"
-        if date_str >= first_tx_date_yearless and date_str <= "12/00":
-            print "Removed {} tx\n".format(i)
-            return lines[i:]
-        print "Nuking " + line
-
-    print "Nothing to filter\n"
-    return []
-
-
-def convert_to_tsv(matches):
-    clean_lines = []
-    for line in matches:
+    # convert resulting "raw" tx lines with into our own tsv-based "tx format"
+    tsv_lines = []
+    for line in raw_tx_lines:
         split_on_space = line.split(" ")
-        date = split_on_space[0]
-        desc = " ".join(split_on_space[1:-1])
-        amt = split_on_space[-1]
+        date_str = split_on_space[0]
+        desc_str = " ".join(split_on_space[1:-1])
+        amt_stry = split_on_space[-1]
 
-        clean_line = "{}\t{}\t{}".format(date, desc, amt)
-        clean_lines.append(clean_line)
+        tsv_line = "{}\t{}\t{}".format(date_str, desc_str, amt_stry)
+        tsv_lines.append(tsv_line)
 
-    return clean_lines
+    return tsv_lines
 
 
-def write_to_file(matches, file_to_write):
-    with open(file_to_write, "w") as f_write:
-        for tx_line in matches:
-            f_write.write(tx_line + "\n")
+def get_fixed_date_str(raw_line, statement_start_date, statement_end_date):
+    """
+    Find the date on which the given raw tx line occurs. Since tx lines don't tell
+    you the year, we have to determine the year ourselves.
 
-    print "Wrote {} tx to '{}'".format(len(matches), file_to_write)
+    We do this using the statment end dates. We know that our transaction occurs
+    withing the statement interval, and thus has the same year as one (or both)
+    of the statement start / end dates.
+
+    Append each of these candidate "transaction year" dates to the yearless transaction
+    date, and see if the resulting date is inside the statement interval.
+
+    Unfortunatly, it turns out some transactions can be backdated by as much as 2-3 months,
+    and thus occur prior to the statement interval. Thus we'll have to "widen" our interval
+    quite a bit to make sure to catch them.
+    """
+    safe_start_date = statement_start_date - datetime.timedelta(days=90)
+    safe_end_date = statement_end_date
+
+    yearless_date_str = raw_line.split(" ")[0] # MM/DD
+    date_with_start_year_str = yearless_date_str + "/" + safe_start_date.strftime("%Y") # MM/DD/YYYY
+    date_with_end_year_str = yearless_date_str + "/" + safe_end_date.strftime("%Y") # MM/DD/YYYY
+
+    # check if start date has the right year
+    date_with_start_year = datetime.datetime.strptime(date_with_start_year_str, '%m/%d/%Y')
+    if safe_start_date <= date_with_start_year and date_with_start_year <= safe_end_date:
+        return date_with_start_year_str
+
+    # check if end date has the right year
+    date_with_end_year = datetime.datetime.strptime(date_with_end_year_str, '%m/%d/%Y')
+    if safe_start_date <= date_with_end_year and date_with_end_year <= safe_end_date:
+        return date_with_end_year_str
+
+    raise Exception("Tx line outside of statement interval [{} - 30, {} + 30]: {}"
+                    .format(statement_start_date.date(), statement_end_date.date(), raw_line))
 
 
 if __name__ == '__main__':
