@@ -76,7 +76,6 @@ def converted_to_tx_format(raw_lines_with_header):
     return tsv_lines
 
 
-### TESTS
 def tests():
     # converting raw lines: check sorting and handling of "extra" commas
     raw_withdrawal = '"01/27/2019","ATM","","WITHDRAWL YO","$50.17","","$1,256.26"'

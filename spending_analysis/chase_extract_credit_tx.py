@@ -79,6 +79,7 @@ def converted_to_tx_format(raw_lines_with_tons_of_garbage):
         tsv_line = "{}\t{}\t{}".format(date_str, desc_str, amt_stry)
         tsv_lines.append(tsv_line)
 
+    tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[0], '%m/%d/%Y'))
     return tsv_lines
 
 
@@ -115,11 +116,42 @@ def get_fixed_date_str(raw_line, statement_start_date, statement_end_date):
     if safe_start_date <= date_with_end_year and date_with_end_year <= safe_end_date:
         return date_with_end_year_str
 
-    raise Exception("Tx line outside of statement interval [{} - 30, {} + 30]: {}"
+    raise Exception("Tx line outside of statement interval [{} - 90, {}]: {}"
                     .format(statement_start_date.date(), statement_end_date.date(), raw_line))
+
+
+def tests():
+    # converting raw lines: check ignoring non-tx lines, sorting, and date fixing
+    non_tx1 = "Minimum Payment: $25.00"
+    date_line = "Opening/Closing Date 05/10/18 - 06/09/18"
+    non_tx3 = "175.00 X 0.046171428 (EXCHG RATE)"
+    in_interval_tx = "05/11 Zabka - Seifertova 455 Praha 3 2.57"
+    non_tx2 = "09/21 CZECH KORUNA"
+    backdated_tx = "03/15 HONG KONG EXCBG3NK__81870 LANTAU -53.51"
+    non_tx4 = "Previous points balance 193,092"
+
+    test1_converted = converted_to_tx_format([non_tx1, date_line, non_tx3, in_interval_tx, non_tx2, backdated_tx, non_tx4])
+    test1_expected = ['03/15/2018\tHONG KONG EXCBG3NK__81870 LANTAU\t-53.51',
+                      '05/11/2018\tZabka - Seifertova 455 Praha 3\t2.57']
+    if test1_converted != test1_expected:
+        raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(test1_expected, test1_converted))
+
+    # test date fixing when the interval straddles the year
+    date_line = "Opening/Closing Date 12/10/18 - 01/09/19"
+    prior_year_backdated_tx = "12/08 TRAVEL CREDIT $300/YEAR -160.80"
+    prior_year_tx = "12/20 SHRUNKEN HEAD SKATEBOARDS PORTLAND OR 149.00"
+    latter_year_tx = "01/08 FIGUEROA MOUNTAIN BREWING SANTA BARBARA CA 10.84"
+
+    test2_converted = converted_to_tx_format([date_line, prior_year_backdated_tx, prior_year_tx, latter_year_tx])
+    test2_expected = ['12/08/2018\tTRAVEL CREDIT $300/YEAR\t-160.80',
+                      '12/20/2018\tSHRUNKEN HEAD SKATEBOARDS PORTLAND OR\t149.00',
+                      '01/08/2019\tFIGUEROA MOUNTAIN BREWING SANTA BARBARA CA\t10.84']
+    if test2_converted != test2_expected:
+        raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(test2_expected, test2_converted))
 
 
 if __name__ == '__main__':
     if utils.OP_MODE != utils.OperatingMode.CHASE_CREDIT:
         raise Exception("Can only run in chase credit mode")
+    tests()
     main()

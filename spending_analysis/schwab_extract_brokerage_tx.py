@@ -77,7 +77,6 @@ def converted_to_tx_format(raw_lines_with_header):
     return tsv_lines
 
 
-### TESTS
 def tests():
     # converting raw lines: check sorting and handling of "extra" commas
     simple_raw_line = '"01/16/2019 as of 01/15/2019","Bank Interest","","WEIRD DATES","","","","$0.51",'

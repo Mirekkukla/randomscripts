@@ -64,7 +64,6 @@ def converted_to_tx_format(raw_lines_with_header):
     return tsv_lines
 
 
-### TESTS
 def tests():
     # converting raw lines: check sorting and handling of "extra" commas
     simple_raw = 'DEBIT,09/07/2018,"SIMPLE DESC",-100.00,ATM,324.17,,'
