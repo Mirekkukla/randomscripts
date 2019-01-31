@@ -39,7 +39,7 @@ def load_categorized_tx(filepath):
         categorizations[naked_line] = category
 
     # note that not all lines are distinct (e.g. "CRUNCH112 800-547-1743 NY" for chase credit)
-    print "{} lines ({} distinct) were categorized\n".format(len(lines), len(categorizations))
+    print "{} lines ({} distinct) categorized lines loaded\n".format(len(lines), len(categorizations))
     return categorizations
 
 
@@ -53,5 +53,5 @@ def check_no_bogus_categorizations(categorizations, lines):
             raise Exception("Bogus categorized line: '{}'".format([categorized_line]))
 
 
-if __name__ == "__main__":
-    main()
+# run tests on import
+main()

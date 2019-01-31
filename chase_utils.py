@@ -56,8 +56,8 @@ credit_terms = {
 }
 
 checking_terms = {
-    'CNC': ["CHASE CREDIT CRD AUTOPAY", "SCHWAB", "DEPOSIT", "TRANSFER", "TAX", "CHECK_DEPOSIT",
-            "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY", "C PAYROLL"],
+    'CNC': ["CHASE CREDIT CRD AUTOPAY", "SCHWAB", "DEPOSIT", "TRANSFER", "TAX", "C PAYROLL",
+            "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY"],
     'ATM': ["ATM", "CHECK_PAID"],
     'MOV': ["WIRE FEE", "Pacific Gas"],
     'FEE': ["ATM FEE", "ADJUSTMENT FEE", "SERVICE FEE", "COUNTER CHECK"],
@@ -154,69 +154,54 @@ def load_all_tx_lines():
     if not lines:
         raise Exception("Didn't find any tx lines, something is wrong")
 
-    print "Loaded {} total tx lines\n".format(len(lines))
+    print "Loaded {} total tx lines".format(len(lines))
     check_tsv_tx_format(lines)
     return lines
 
-def get_description(tsv_line):
-    description_index_by_mode = {
-        OperatingMode.CHASE_CREDIT: 1,
-        OperatingMode.CHASE_CHECKING: 2
-    }
-    description_index = description_index_by_mode[OP_MODE]
-    return tsv_line.split('\t')[description_index]
-
 
 def check_tsv_tx_format(lines, with_category=False):
+    leading_date_expression_by_mode = {
+        OperatingMode.CHASE_CREDIT: r'^[0-9]{2}/[0-9]{2}', # "DD/MM",
+        OperatingMode.CHASE_CHECKING: r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
+    }
 
-    def check_credit_line(line):
-        leading_date_exp = r'^[0-9]{2}/[0-9]{2}' # "MM/DD"
+    for line in lines:
+        leading_date_exp = leading_date_expression_by_mode[OP_MODE]
         number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
         end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
         tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + end_of_line_exp
         if not re.match(tsv_tx_expr, line):
             print "Split on tab: {}".format(line.split('\t'))
-            raise Exception("Line not in tsv tx format: [{}]".format(line))
+            raise Exception("Line not in tsv tx format, check number decimal points: [{}]".format(line))
 
-    def check_checking_line(line):
-        expected_tab_count = 8 if with_category else 7
-        if line.count('\t') != expected_tab_count:
-            print "Split on tab: {}".format(line.split('\t'))
-            raise Exception("Line not in tsv tx format, has {} tabs: [{}]".format(line.count('\t'), line))
-
-    fix_fn_by_mode = {
-        OperatingMode.CHASE_CREDIT: check_credit_line,
-        OperatingMode.CHASE_CHECKING: check_checking_line
-    }
-    for line in lines:
-        fix_fn_by_mode[OP_MODE](line)
     print "Passed tsv tx format check"
 
 
-def fix_gdocs_number_formatting(raw_lines):
-    """
-    Google docs prefixes a zero to amts < 1 dollar, remove it to match chase
-    Also, for checking, the quotes surrounding the description get dropped and need to be added back
-    """
-    def fix_credit_line(line):
-        number_str = line.split('\t')[-2]
-        if number_str[0] == "0":
-            chunk_before_num = line.rsplit('\t', 2)[0]
-            fixed_num = number_str[1:]
-            chunk_after_num = line.split('\t')[-1]
-            return'\t'.join([chunk_before_num, fixed_num, chunk_after_num])
+def fix_gdocs_number_formatting(manually_categorized_lines):
+    """ Google docs prefixes a zero to amts < 1 dollar, remove it to match the export format"""
+    fixed_lines = []
+    for line in manually_categorized_lines:
+        [date_str, desc, amt_str, category] = line.split('\t')
+        if amt_str[0] != "0":
+            fixed_lines.append(line)
+            continue
 
-        return line
+        fixed_amt_str = amt_str[1:]
+        fixed_line = '\t'.join([date_str, desc, fixed_amt_str, category])
+        fixed_lines.append(fixed_line)
 
-    def fix_checking_line(line):
-        segments = line.split('\t')
-        desc = segments[2]
-        segments[2] = '"{}"'.format(desc)
-        return "\t".join(segments)
+    return fixed_lines
 
-    fix_fn_by_mode = {
-        OperatingMode.CHASE_CREDIT: fix_credit_line,
-        OperatingMode.CHASE_CHECKING: fix_checking_line
-    }
 
-    return [fix_fn_by_mode[OP_MODE](line) for line in raw_lines]
+def tests():
+    # test gdocs format fixing
+    good_line = "02/21/2018\tI'M GOOD\t.88\tCNC"
+    bad_line = "02/21/2018\tNEED FIXING\t0.99\tCNC"
+    expected = ["02/21/2018\tI'M GOOD\t.88\tCNC", "02/21/2018\tNEED FIXING\t.99\tCNC"]
+    converted = fix_gdocs_number_formatting([good_line, bad_line])
+    if converted != expected:
+        raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
+
+
+if __name__ == "__main__":
+    tests()

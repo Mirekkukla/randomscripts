@@ -35,7 +35,7 @@ import chase_load_manual_categorized
 
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all un-categorized lines that match it)
-PER_LINE_QUERY = "rail"
+PER_LINE_QUERY = ""
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
 
@@ -47,7 +47,7 @@ def main():
     lines = utils.load_all_tx_lines()
     categorizations = chase_load_manual_categorized.safely_get_manual_categorizations(lines)
 
-    print "Categorizing all lines"
+    print "Categorizing all lines\n"
     for line in lines:
 
         # skip manual categorizations
@@ -69,14 +69,14 @@ def main():
     # if not searching for a specific term, print distribution of remaining lines
     if not PER_LINE_QUERY and uncategorized_lines:
         all_terms = reduce(lambda l1, l2: l1 + l2, utils.get_terms().values())
-        print_distribution(get_desc_distribution(uncategorized_lines, all_terms))
-        # print_distribution(get_word_distribution(uncategorized_lines, all_terms))
+        print_distribution(get_desc_distribution(uncategorized_lines, all_terms), "Desc distribution")
+        print_distribution(get_word_distribution(uncategorized_lines, all_terms), "Word distribution")
 
     print "Total lines processed: {}".format(len(lines))
     print "Total categorized: {}".format(categorized_count + match_count)
     print "- Manually categorized: {}".format(categorized_count)
     print "- Matched a term: {}".format(match_count)
-    print "Remaining: {}\n".format(len(uncategorized_lines))
+    print "Remaining: {}".format(len(uncategorized_lines))
 
     # export remaining lines into TSV which will get copy-pasted to google sheets and manually populated
     uncategorized_lines_filepath = os.path.join(utils.get_base_folder_path(), UNCATEGORIZED_LINES_FILENAME)
@@ -132,7 +132,7 @@ def get_desc_distribution(lines, terms_to_filter_out):
     for line in lines:
         if substring_match(line, terms_to_filter_out):
             continue
-        desc = utils.get_description(line)
+        desc = line.split('\t')[1]
         if desc not in desc_count:
             desc_count[desc] = 0
         desc_count[desc] += 1
@@ -144,20 +144,23 @@ def get_word_distribution(lines, terms_to_filter_out):
     for line in lines:
         if substring_match(line, terms_to_filter_out):
             continue
-        desc = utils.get_description(line)
-        for word in desc.split(" "):
+        desc = line.split('\t')[1]
+        for word in desc.split():
             if word not in word_count:
                 word_count[word] = 0
             word_count[word] += 1
     return word_count
 
 
-def print_distribution(occurance_count_by_desc):
-    print "Distribution:"
-    for desc, count in sorted(occurance_count_by_desc.iteritems(), key=lambda (k, v): v):
-        if count >= 3:
+def print_distribution(count_by_desc, distibution_desc):
+    recurring_items = {desc: count for desc, count in count_by_desc.iteritems() if count >= 3}
+    if recurring_items:
+        print "{}: ".format(distibution_desc)
+        for desc, count in sorted(recurring_items.iteritems(), key=lambda (k, v): v):
             print "{}: {}".format(desc, count)
-
+    else:
+        print "{} is empty".format(distibution_desc)
+    print ""
 
 
 if __name__ == "__main__":
