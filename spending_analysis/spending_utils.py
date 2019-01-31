@@ -6,9 +6,10 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
     CHASE_CREDIT = 1
     CHASE_CHECKING = 2
     SCHWAB_CHECKING = 3
+    SCHWAB_BROKERAGE = 4
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
-OP_MODE = OperatingMode.SCHWAB_CHECKING
+OP_MODE = OperatingMode.SCHWAB_BROKERAGE
 
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
@@ -75,12 +76,17 @@ schwab_checking_terms = {
     'FEE': ["INTADJUST"]
 }
 
+schwab_brokerage_terms = {
+
+}
+
 
 def get_terms(mode=OP_MODE):
     terms_by_mode = {
         OperatingMode.CHASE_CREDIT: chase_credit_terms,
         OperatingMode.CHASE_CHECKING: chase_checking_terms,
-        OperatingMode.SCHWAB_CHECKING: schwab_checking_terms
+        OperatingMode.SCHWAB_CHECKING: schwab_checking_terms,
+        OperatingMode.SCHWAB_BROKERAGE: schwab_brokerage_terms
     }
     return terms_by_mode[mode]
 
@@ -97,7 +103,8 @@ def get_base_folder_path(mode=OP_MODE):
     folder_by_mode = {
         OperatingMode.CHASE_CREDIT: "chase_extract_credit_data",
         OperatingMode.CHASE_CHECKING: "chase_extract_checking_data",
-        OperatingMode.SCHWAB_CHECKING: "schwab_extract_checking_data"
+        OperatingMode.SCHWAB_CHECKING: "schwab_extract_checking_data",
+        OperatingMode.SCHWAB_BROKERAGE: "schwab_extract_brokerage_data"
     }
     return os.path.abspath("/Users/mirek/" + folder_by_mode[mode])
 
@@ -111,18 +118,14 @@ def get_raw_filenames(mode=OP_MODE):
     files_by_mode = {
         OperatingMode.CHASE_CREDIT: ["mirek_2018_raw.txt", "soph_2018_raw.txt"],
         OperatingMode.CHASE_CHECKING: ["mirek_2018_checking_raw.csv", "soph_2018_checking_raw.csv"],
-        OperatingMode.SCHWAB_CHECKING: ["mirek_2018_schwab_checking_raw.csv"]
+        OperatingMode.SCHWAB_CHECKING: ["mirek_2018_schwab_checking_raw.csv"],
+        OperatingMode.SCHWAB_BROKERAGE: ["mirek_2018_schwab_brokerage_raw.csv"],
     }
     return files_by_mode[mode]
 
 
 def get_extracted_tx_filepath(raw_filename, mode=OP_MODE):
-    raw_suffix_by_mode = {
-        OperatingMode.CHASE_CREDIT: "raw.txt",
-        OperatingMode.CHASE_CHECKING: "raw.csv",
-        OperatingMode.SCHWAB_CHECKING: "raw.csv"
-    }
-    raw_suffix = raw_suffix_by_mode[mode]
+    raw_suffix = "raw.txt" if mode == OperatingMode.CHASE_CREDIT else "raw.csv"
     if raw_suffix not in raw_filename:
         raise Exception("Bad raw filename: '{}'".format(raw_filename))
 
@@ -175,17 +178,16 @@ def load_all_tx_lines():
 
 
 def check_tsv_tx_format(lines, with_category=False, mode=OP_MODE):
-    leading_date_expression_by_mode = {
-        OperatingMode.CHASE_CREDIT: r'^[0-9]{2}/[0-9]{2}', # "DD/MM",
-        OperatingMode.CHASE_CHECKING: r'^[0-9]{2}/[0-9]{2}/[0-9]{4}', # "DD/MM/YYYY"
-        OperatingMode.SCHWAB_CHECKING: r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
-    }
+    if mode == OperatingMode.CHASE_CREDIT:
+        leading_date_exp = r'^[0-9]{2}/[0-9]{2}' # "DD/MM",
+    else:
+        leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}', # "DD/MM/YYYY"
+
+    number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
+    end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
+    tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + end_of_line_exp
 
     for line in lines:
-        leading_date_exp = leading_date_expression_by_mode[mode]
-        number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
-        end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
-        tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + end_of_line_exp
         if not re.match(tsv_tx_expr, line):
             print "Split on tab: {}".format(line.split('\t'))
             raise Exception("Line not in tsv tx format, check number decimal points: [{}]".format(line))

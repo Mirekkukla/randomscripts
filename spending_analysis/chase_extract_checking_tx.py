@@ -42,7 +42,7 @@ def main():
 
         converted_tx_lines = converted_to_tx_format(filtered_raw_lines)
         extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
-        write_to_file(converted_tx_lines, extracted_filepath)
+        utils.write_to_file(converted_tx_lines, extracted_filepath)
 
 
 def filter_tx_lines(raw_lines):
@@ -89,14 +89,6 @@ def converted_to_tx_format(lines):
 
     tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[0], '%m/%d/%Y'))
     return tsv_lines
-
-
-def write_to_file(matches, file_to_write):
-    with open(file_to_write, "w") as f_write:
-        for tx_line in matches:
-            f_write.write(tx_line + "\n")
-
-    print "Wrote {} tx to '{}'".format(len(matches), file_to_write)
 
 
 ### TESTS
