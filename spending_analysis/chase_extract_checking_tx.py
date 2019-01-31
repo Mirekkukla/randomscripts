@@ -28,51 +28,24 @@ import datetime
 import os
 import spending_utils as utils
 
-RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 
 def main():
-    utils.optionally_create_dir(utils.get_extracted_tx_folder_path())
-
-    for raw_filename in utils.get_raw_filenames():
-        raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
-        print "Running for '{}'".format(raw_filepath)
-
-        raw_lines_with_header = utils.load_from_file(raw_filepath)
-        filtered_raw_lines = filter_tx_lines(raw_lines_with_header[1:])
-
-        converted_tx_lines = converted_to_tx_format(filtered_raw_lines)
-        extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
-        utils.write_to_file(converted_tx_lines, extracted_filepath)
+    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
+    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
 
 
-def filter_tx_lines(raw_lines):
-    """ Remove tx outside of our desired date interval. Return filtered list """
-    print "Dropping tx outside of [{}, {}]".format(utils.FIRST_TX_DATE.date(), utils.LAST_TX_DATE.date())
-    filtered_lines = []
-    for line in raw_lines:
-        date_str = line.split(",")[1] # "MM/DD/YYYY"
-        date = datetime.datetime.strptime(date_str, '%m/%d/%Y')
-        if date >= utils.FIRST_TX_DATE and date <= utils.LAST_TX_DATE:
-            filtered_lines.append(line)
-        else:
-            print "Nuking {}".format(line)
-
-    total_removed = len(raw_lines) - len(filtered_lines)
-    print "Removed {} transactions".format(total_removed)
-    return filtered_lines
-
-def converted_to_tx_format(lines):
+def converted_to_tx_format(raw_lines_with_header):
     """
     Input: list of tx lines in the raw format, e.g:
     DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
 
     Output: list of "tx format" lines ordered by ascending date. Format:
     [date]\t[description with no surrounding quotes or outer whitespace]\t[amount]
-
-    WARNING: there might commas might be inside the quote-surrounded description field
     """
+    lines = raw_lines_with_header[1:]
     tsv_lines = []
     for line in lines:
+        # WARNING: there are occasionally commas inside the description field, can't split on ","
         if not len(line.split('"')) == 3:
             raise Exception("Line has more than the 2 'description' quotes: '{}'".format(line))
 
@@ -97,7 +70,7 @@ def tests():
     simple_raw = 'DEBIT,09/07/2018,"SIMPLE DESC",-100.00,ATM,324.17,,'
     raw_with_comma = 'DEBIT,09/06/2018,"EARLIER DATE, AND COMMA",-100.00,ATM,324.17,,'
     expected = ['09/06/2018\tEARLIER DATE, AND COMMA\t100.00', '09/07/2018\tSIMPLE DESC\t100.00']
-    converted = converted_to_tx_format([simple_raw, raw_with_comma])
+    converted = converted_to_tx_format(["header", simple_raw, raw_with_comma])
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 

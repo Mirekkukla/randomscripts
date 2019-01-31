@@ -35,7 +35,7 @@ import load_manual_categorized_tx
 
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all un-categorized lines that match it)
-GREP_QUERY = "ACH"
+GREP_QUERY = ""
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
 

@@ -23,47 +23,21 @@ Process:
   - export checking transactions as csv from schwab website as
   - set spending_utils.OP_MODE to "OperatingMode.SCHWAB_CHECKING"
   - run script
+
+FOLLOWUP: we can ignore the brokerage file, all the transactions should cancel out
 """
 
 import datetime
 import os
 import spending_utils as utils
 
-RAW_DATA_FOLDER_PATH = os.path.join(utils.get_base_folder_path(), "raw_data")
 
 def main():
-    utils.optionally_create_dir(utils.get_extracted_tx_folder_path())
-
-    for raw_filename in utils.get_raw_filenames():
-        raw_filepath = os.path.join(RAW_DATA_FOLDER_PATH, raw_filename)
-        print "Running for '{}'".format(raw_filepath)
-
-        raw_lines_with_header = utils.load_from_file(raw_filepath)
-        filtered_raw_lines = filter_tx_lines(raw_lines_with_header[4:])
-
-        converted_tx_lines = converted_to_tx_format(filtered_raw_lines)
-        extracted_filepath = utils.get_extracted_tx_filepath(raw_filename)
-        utils.write_to_file(converted_tx_lines, extracted_filepath)
+    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
+    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
 
 
-def filter_tx_lines(raw_lines):
-    """ Remove tx outside of our desired date interval. Return filtered list """
-    print "Dropping tx outside of [{}, {}]".format(utils.FIRST_TX_DATE.date(), utils.LAST_TX_DATE.date())
-    filtered_lines = []
-    for line in raw_lines:
-        date_str = line.split(",")[0].strip('"') # "MM/DD/YYYY"
-        date = datetime.datetime.strptime(date_str, '%m/%d/%Y')
-        if date >= utils.FIRST_TX_DATE and date <= utils.LAST_TX_DATE:
-            filtered_lines.append(line)
-        else:
-            print "Nuking {}".format(line)
-
-    total_removed = len(raw_lines) - len(filtered_lines)
-    print "Removed {} transactions".format(total_removed)
-    return filtered_lines
-
-
-def converted_to_tx_format(lines):
+def converted_to_tx_format(raw_lines_with_header):
     """
     Input: list of tx lines in the raw format, e.g:
     "01/27/2019","ATM","","CSAS Taboritska 16/24 Praha","$50.17","","$56.26"
@@ -74,6 +48,7 @@ def converted_to_tx_format(lines):
 
     Return list of converted lines
     """
+    lines = raw_lines_with_header[4:]
     tsv_lines = []
     for line in lines:
         # WARNING: there are occasionally commas inside the numeric fields, can't split on ","
@@ -107,7 +82,7 @@ def tests():
     raw_withdrawal = '"01/27/2019","ATM","","WITHDRAWL YO","$50.17","","$1,256.26"'
     raw_deposit = '"01/26/2019","TRANSFER","","EARLIER DEPOSIT YO","","$1,000.00","$1,256.26"'
     expected = ['01/26/2019\tTRANSFER + EARLIER DEPOSIT YO\t-1,000.00', '01/27/2019\tATM + WITHDRAWL YO\t50.17']
-    converted = converted_to_tx_format([raw_withdrawal, raw_deposit])
+    converted = converted_to_tx_format(["header1", "header2", "header3", "header4", raw_withdrawal, raw_deposit])
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 

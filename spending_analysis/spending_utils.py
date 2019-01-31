@@ -9,7 +9,7 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
     SCHWAB_BROKERAGE = 4
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
-OP_MODE = OperatingMode.SCHWAB_BROKERAGE
+OP_MODE = OperatingMode.CHASE_CHECKING
 
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
@@ -77,9 +77,12 @@ schwab_checking_terms = {
 }
 
 schwab_brokerage_terms = {
-
+    'CNC': ["TRANSFER", "VANGUARD"],
+    'I': ["Interest"]
 }
 
+
+# TERM-SPECIFIC STUFF
 
 def get_terms(mode=OP_MODE):
     terms_by_mode = {
@@ -90,7 +93,6 @@ def get_terms(mode=OP_MODE):
     }
     return terms_by_mode[mode]
 
-
 def get_all_legal_categories():
     all_mode_values = [v for k, v in OperatingMode.__dict__.iteritems() if not k.startswith('__')]
     categories = set()
@@ -98,6 +100,9 @@ def get_all_legal_categories():
         listed_categories_for_mode = get_terms(mode_value).keys()
         categories.update(listed_categories_for_mode)
     return categories
+
+
+# PATH-RELATED STUFF
 
 def get_base_folder_path(mode=OP_MODE):
     folder_by_mode = {
@@ -108,11 +113,14 @@ def get_base_folder_path(mode=OP_MODE):
     }
     return os.path.abspath("/Users/mirek/" + folder_by_mode[mode])
 
+
 def get_extracted_tx_folder_path():
     return os.path.join(get_base_folder_path(), "extracted_data")
 
+
 def get_manually_categorized_tx_folder_path():
     return os.path.join(get_base_folder_path(), "manually_categorized_data")
+
 
 def get_raw_filenames(mode=OP_MODE):
     files_by_mode = {
@@ -133,7 +141,7 @@ def get_extracted_tx_filepath(raw_filename, mode=OP_MODE):
     return os.path.join(get_extracted_tx_folder_path(), tx_filename)
 
 
-# GENERIC FILE STUFF
+# FILE READING / WRITING
 
 def optionally_create_dir(dir_path):
     if not os.path.exists(dir_path):
@@ -162,6 +170,38 @@ def write_to_file(lines, filepath):
 
 # TX-FORMAT SPECIFIC STUFF
 
+def run_extraction_loop(raw_data_folder_path, convert_to_tx_format_fn):
+    """ The main loop run by the "extraction" scripts. It's behavior is controlled by OP_MODE """
+    optionally_create_dir(get_extracted_tx_folder_path())
+
+    for raw_filename in get_raw_filenames():
+        raw_filepath = os.path.join(raw_data_folder_path, raw_filename)
+        print "Running for '{}'".format(raw_filepath)
+
+        raw_lines_with_header = load_from_file(raw_filepath)
+        converted_tx_lines = convert_to_tx_format_fn(raw_lines_with_header)
+        filtered_tx_lines = filter_tx_lines(converted_tx_lines)
+
+        extracted_filepath = get_extracted_tx_filepath(raw_filename)
+        write_to_file(filtered_tx_lines, extracted_filepath)
+
+
+def filter_tx_lines(tx_lines):
+    """ Remove tx outside of our desired date interval. Return filtered list """
+    print "Dropping tx outside of [{}, {}]".format(FIRST_TX_DATE.date(), LAST_TX_DATE.date())
+    filtered_lines = []
+    for line in tx_lines:
+        date_str = line.split("\t")[0] # "MM/DD/YYYY"
+        date = datetime.datetime.strptime(date_str, '%m/%d/%Y')
+        if date >= FIRST_TX_DATE and date <= LAST_TX_DATE:
+            filtered_lines.append(line)
+        else:
+            print "Nuking {}".format(line)
+
+    total_removed = len(tx_lines) - len(filtered_lines)
+    print "Removed {} transactions".format(total_removed)
+    return filtered_lines
+
 def load_all_tx_lines():
     print "Loading all extracted tx lines"
     lines = []
@@ -177,11 +217,13 @@ def load_all_tx_lines():
     return lines
 
 
+# SANITY CHECKS
+
 def check_tsv_tx_format(lines, with_category=False, mode=OP_MODE):
     if mode == OperatingMode.CHASE_CREDIT:
         leading_date_exp = r'^[0-9]{2}/[0-9]{2}' # "DD/MM",
     else:
-        leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}', # "DD/MM/YYYY"
+        leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
 
     number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
     end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
