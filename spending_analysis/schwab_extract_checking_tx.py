@@ -1,26 +1,26 @@
 """
-Chase checking statments are wonkily formatted, so we can't copy-paste them like
-with credit card statements. Fortunately, we can export transactions in CSV format
-going back two years, so that's the file / format we'll use herez.
-
-Input: "raw" csv-formated chase checking transaction data file(s)
+Input: "raw" csv-formated schwab checking transaction data file
 Out: tsv-formatted file(s) with date filtered and "cleaned up" transactions
 
-Input format: input file has a header, as shown below with an example line:
-Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #
-DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
+Input format: input file has a 4 header lines, the second of which is a column header:
+"Date","Type","Check #","Description","Withdrawal (-)","Deposit (+)","RunningBalance"
+
+Example lines:
+"01/29/2019","TRANSFER","","Funds Transfer from Brokerage -2106","","$561.11","$617.37"
+"01/27/2019","ATM","","CSAS Taboritska 16/24 Praha","$50.17","","$56.26"
 
 Cleanup and filtering: we want the converted file to resemble the "chase credit extract" format
-  - remove header
-  - only keep the "Posting Date," "Description", and "Amount" columns
+  - remove header lines
+  - combine "type" and "description" column, and choose the empty value of Deposit / Withdrawal for amount
+  - final format should reflect  "Date," "[Type + Description]", and "[Deposit or withdrawal]" columns
   - ignore all transactions outside of our desired date interval
-  - remove the quotes around the "Description" field contents and strip outer whitespace
+  - remove the quotes around the the above fields field contents and strip outer whitespace
   - flip the sign of the "amount" field
   - convert to tsv
 
 Process:
-  - export checking transactions as csv from chase website as
-  - set spending_utils.OP_MODE to "OperatingMode.CHASE_CHECKING"
+  - export checking transactions as csv from schwab website as
+  - set spending_utils.OP_MODE to "OperatingMode.SCHWAB_CHECKING"
   - run script
 """
 

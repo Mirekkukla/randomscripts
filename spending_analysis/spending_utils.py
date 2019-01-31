@@ -5,6 +5,7 @@ import re
 class OperatingMode(object): #pylint: disable=too-few-public-methods
     CHASE_CREDIT = 1
     CHASE_CHECKING = 2
+    SCHWAB_CHECKING = 3
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
 OP_MODE = OperatingMode.CHASE_CREDIT
