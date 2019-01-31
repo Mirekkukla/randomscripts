@@ -64,7 +64,7 @@ checking_terms = {
     'SQR': ["SQC*", "VENMO", "payment from SUZANNE", "payment to Mom", "payment to Suzy"],
     'F': ["NORWEGIAN", "EXPEDIA"],
     'HMM': ["PIZTUZTIYA"],
-    'TRN': ["RAIL"],
+    'TR': ["RAIL"],
 
 }
 
