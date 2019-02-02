@@ -3,10 +3,11 @@ import os
 import re
 
 class OperatingMode(object): #pylint: disable=too-few-public-methods
-    CHASE_CREDIT = 1
-    CHASE_CHECKING = 2
-    SCHWAB_CHECKING = 3
-    SCHWAB_BROKERAGE = 4
+    OLD_CHASE_CREDIT = 1
+    CHASE_CREDIT = 2
+    CHASE_CHECKING = 3
+    SCHWAB_CHECKING = 4
+    SCHWAB_BROKERAGE = 5
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
 OP_MODE = OperatingMode.CHASE_CREDIT
@@ -86,6 +87,7 @@ schwab_brokerage_terms = {
 
 def get_terms(mode=OP_MODE):
     terms_by_mode = {
+        OperatingMode.OLD_CHASE_CREDIT: chase_credit_terms, # the "statement" input format
         OperatingMode.CHASE_CREDIT: chase_credit_terms,
         OperatingMode.CHASE_CHECKING: chase_checking_terms,
         OperatingMode.SCHWAB_CHECKING: schwab_checking_terms,
@@ -106,6 +108,7 @@ def get_all_legal_categories():
 
 def get_base_folder_path(mode=OP_MODE):
     folder_by_mode = {
+        OperatingMode.OLD_CHASE_CREDIT: "old_chase_extract_credit_data",
         OperatingMode.CHASE_CREDIT: "chase_extract_credit_data",
         OperatingMode.CHASE_CHECKING: "chase_extract_checking_data",
         OperatingMode.SCHWAB_CHECKING: "schwab_extract_checking_data",
@@ -124,7 +127,8 @@ def get_manually_categorized_tx_folder_path():
 
 def get_raw_filenames(mode=OP_MODE):
     files_by_mode = {
-        OperatingMode.CHASE_CREDIT: ["mirek_2018_raw.txt", "soph_2018_raw.txt"],
+        OperatingMode.OLD_CHASE_CREDIT: ["mirek_2018_raw.txt", "soph_2018_raw.txt"],
+        OperatingMode.CHASE_CREDIT: ["mirek_2018_raw.csv", "soph_2018_raw.csv"],
         OperatingMode.CHASE_CHECKING: ["mirek_2018_checking_raw.csv", "soph_2018_checking_raw.csv"],
         OperatingMode.SCHWAB_CHECKING: ["mirek_2018_schwab_checking_raw.csv"],
         OperatingMode.SCHWAB_BROKERAGE: ["mirek_2018_schwab_brokerage_raw.csv"],
@@ -133,7 +137,7 @@ def get_raw_filenames(mode=OP_MODE):
 
 
 def get_extracted_tx_filepath(raw_filename, mode=OP_MODE):
-    raw_suffix = "raw.txt" if mode == OperatingMode.CHASE_CREDIT else "raw.csv"
+    raw_suffix = "raw.txt" if mode == OperatingMode.OLD_CHASE_CREDIT else "raw.csv"
     if raw_suffix not in raw_filename:
         raise Exception("Bad raw filename: '{}'".format(raw_filename))
 
@@ -173,17 +177,20 @@ def write_to_file(lines, filepath):
 def run_extraction_loop(raw_data_folder_path, convert_to_tx_format_fn):
     """ The main loop run by the "extraction" scripts. It's behavior is controlled by OP_MODE """
     optionally_create_dir(get_extracted_tx_folder_path())
-
     for raw_filename in get_raw_filenames():
         raw_filepath = os.path.join(raw_data_folder_path, raw_filename)
-        print "Running for '{}'".format(raw_filepath)
+        print "Running extraction loop for '{}'".format(raw_filepath)
 
         raw_lines_with_header = load_from_file(raw_filepath)
         converted_tx_lines = convert_to_tx_format_fn(raw_lines_with_header)
         filtered_tx_lines = filter_tx_lines(converted_tx_lines)
 
-        extracted_filepath = get_extracted_tx_filepath(raw_filename)
-        write_to_file(filtered_tx_lines, extracted_filepath)
+        if filtered_tx_lines:
+            extracted_filepath = get_extracted_tx_filepath(raw_filename)
+            write_to_file(filtered_tx_lines, extracted_filepath)
+        else:
+            print "No transactions from processing {}".format(raw_filename)
+        print ""
 
 
 def filter_tx_lines(tx_lines):

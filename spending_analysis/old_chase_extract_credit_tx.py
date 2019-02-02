@@ -1,4 +1,10 @@
 """
+NOTE: turns out scraping tx from statement pdfs isn't necessary.
+You can now export more than 5 months of "activity" (there used
+to be 5 month limit). Keeping this in case things change.
+
+============================================================
+
 Copy and paste the entire contents of chase statmement pdf.
 Extract only those lines that represent transactions ("tx lines"),
 convert them to a simpler tx format, and export them to tsv new file.
@@ -151,7 +157,7 @@ def tests():
 
 
 if __name__ == '__main__':
-    if utils.OP_MODE != utils.OperatingMode.CHASE_CREDIT:
+    if utils.OP_MODE != utils.OperatingMode.OLD_CHASE_CREDIT:
         raise Exception("Can only run in chase credit mode")
     tests()
     main()
