@@ -72,6 +72,6 @@ def tests():
 
 if __name__ == '__main__':
     if utils.OP_MODE != utils.OperatingMode.CHASE_CREDIT:
-        raise Exception("Can only run in chase checking mode")
+        raise Exception("Can only run in chase credit mode")
     tests()
     main()

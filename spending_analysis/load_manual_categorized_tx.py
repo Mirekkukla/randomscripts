@@ -16,7 +16,7 @@ def main():
 def safely_get_manual_categorizations(lines):
     manual_tx_path = os.path.join(utils.get_base_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME)
     categorizations = load_categorized_tx(manual_tx_path)
-    check_no_bogus_categorizations(categorizations, lines)
+    # check_no_bogus_categorizations(categorizations, lines)
     return categorizations
 
 
