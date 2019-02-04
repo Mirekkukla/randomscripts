@@ -1,23 +1,22 @@
 """
 This script helps you find keywords that can be used to categorize tx,
-creates a template you can use to create manual categorizations,
-and sanity checks the resulting file to ensure full coverage.
+and exports a list of transactions that don't get auto-categorized using
+the existing keywords.
 
-Input: a clean tsv file of chase tx lines, as exported by `chase_extract_tx.py`
-Output: `REMAINING_LINES_FILENAME` tsv file, consisting of lines that don't have coverage
+Input: a clean tsv file of chase tx lines, as exported by `chase_extract_credit_tx.py`
+Output: `UNCATEGORIZED_LINES_FILENAME` tsv file, consisting of lines that don't have coverage
 
 
 Workflow:
 
 1. Find keywords that can be used to auto-categorize transactions:
-- make sure `GREP_QUERY` is empty
-- uncomment one of the two `print_distribution` lines and run script
-- choose a promising term showing up in a frequently occuring desciption
+- make sure `GREP_QUERY` is empty and run script
+- examine the printed distributions and choose a promising term
 - set the term as the value for `GREP_QUERY` and run script
 - if no false positives show up, add the term to the "terms" dictionary
 
 2. Creating manual overrides (once the term list is pretty fixed):
-- run this script (which will export `REMAINING_LINES_FILENAME` tsv file)
+- run this script (which will export `UNCATEGORIZED_LINES_FILENAME` tsv file)
 - paste the exported file contents into google sheets
 - categorize additional transactions manually in google sheets
 - copy contents from google sheets and replace contents of `MANUALLY_CATEGORIZED_FILENAME` using vim
@@ -56,8 +55,8 @@ def main():
             continue
 
         # try auto-assign a category using term matching
-        matching_category = get_matching_category(line)
-        if matching_category:
+        # (unless we're "grepping" to find matches / detect false positives) 
+        if not GREP_QUERY and get_matching_category(line):
             match_count += 1
             continue
 
@@ -69,7 +68,7 @@ def main():
     # if not searching for a specific term, print distribution of remaining lines
     if not GREP_QUERY and uncategorized_lines:
         all_terms = reduce(lambda l1, l2: l1 + l2, utils.get_terms().values(), [])
-        print_distribution(get_desc_distribution(uncategorized_lines, all_terms), "Desc distribution")
+        print_distribution(get_desc_distribution(uncategorized_lines, all_terms), "Desciption distribution")
         print_distribution(get_word_distribution(uncategorized_lines, all_terms), "Word distribution")
 
     print "Total lines processed: {}".format(len(lines))
@@ -77,6 +76,10 @@ def main():
     print "- Manually categorized: {}".format(categorized_count)
     print "- Matched a term: {}".format(match_count)
     print "Remaining: {}".format(len(uncategorized_lines))
+
+    if GREP_QUERY:
+        print "Grep query is '{}', not touching the uncategorized tx file".format(GREP_QUERY)
+        exit(0)
 
     # export remaining lines into TSV which will get copy-pasted to google sheets and manually populated
     uncategorized_lines_filepath = os.path.join(utils.get_base_folder_path(), UNCATEGORIZED_LINES_FILENAME)
