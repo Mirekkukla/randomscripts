@@ -34,10 +34,9 @@ import os
 import spending_utils as utils
 
 def main():
-    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
-    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
+    utils.run_extraction_loop(convert_to_tx_format)
 
-def converted_to_tx_format(raw_lines_with_header):
+def convert_to_tx_format(raw_lines_with_header):
     """
     Input: list of header lines + tx lines in the raw format, e.g:
     "01/24/2019","Sell","VTI","VANGUARD TOTAL STOCK MARKET ETF","33","$134.93","$2.69","$4450.00",
@@ -82,7 +81,7 @@ def tests():
     simple_raw_line = '"01/16/2019 as of 01/15/2019","Bank Interest","","WEIRD DATES","","","","$0.51",'
     harder_raw_line = '"04/16/2018","Buy","VTI","NEGATIVE AMOUNT, COMMA","110","$137.54","$4.95","-$15134.35",'
     expected = ['04/16/2018\tBuy + NEGATIVE AMOUNT, COMMA\t15134.35', '01/15/2019\tBank Interest + WEIRD DATES\t-0.51']
-    converted = converted_to_tx_format(["header1", "header2", simple_raw_line, harder_raw_line])
+    converted = convert_to_tx_format(["header1", "header2", simple_raw_line, harder_raw_line])
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 

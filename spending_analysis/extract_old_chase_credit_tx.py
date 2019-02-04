@@ -48,11 +48,10 @@ import spending_utils as utils
 
 
 def main():
-    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
-    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
+    utils.run_extraction_loop(convert_to_tx_format)
 
 
-def converted_to_tx_format(raw_lines_with_tons_of_garbage):
+def convert_to_tx_format(raw_lines_with_tons_of_garbage):
     start_date = None
     end_date = None
     tx_line_regex = r'^[0-9]{2}/[0-9]{2}.*\ [-]{0,1}[0-9,]*\.[0-9]{2}$'
@@ -136,7 +135,7 @@ def tests():
     backdated_tx = "03/15 HONG KONG EXCBG3NK__81870 LANTAU -53.51"
     non_tx4 = "Previous points balance 193,092"
 
-    test1_converted = converted_to_tx_format([non_tx1, date_line, non_tx3, in_interval_tx, non_tx2, backdated_tx, non_tx4])
+    test1_converted = convert_to_tx_format([non_tx1, date_line, non_tx3, in_interval_tx, non_tx2, backdated_tx, non_tx4])
     test1_expected = ['03/15/2018\tHONG KONG EXCBG3NK__81870 LANTAU\t-53.51',
                       '05/11/2018\tZabka - Seifertova 455 Praha 3\t2.57']
     if test1_converted != test1_expected:
@@ -148,7 +147,7 @@ def tests():
     prior_year_tx = "12/20 SHRUNKEN HEAD SKATEBOARDS PORTLAND OR 149.00"
     latter_year_tx = "01/08 FIGUEROA MOUNTAIN BREWING SANTA BARBARA CA 10.84"
 
-    test2_converted = converted_to_tx_format([date_line, prior_year_backdated_tx, prior_year_tx, latter_year_tx])
+    test2_converted = convert_to_tx_format([date_line, prior_year_backdated_tx, prior_year_tx, latter_year_tx])
     test2_expected = ['12/08/2018\tTRAVEL CREDIT $300/YEAR\t-160.80',
                       '12/20/2018\tSHRUNKEN HEAD SKATEBOARDS PORTLAND OR\t149.00',
                       '01/08/2019\tFIGUEROA MOUNTAIN BREWING SANTA BARBARA CA\t10.84']

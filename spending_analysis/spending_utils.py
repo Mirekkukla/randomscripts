@@ -10,7 +10,7 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
     SCHWAB_BROKERAGE = 5
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
-OP_MODE = OperatingMode.CHASE_CREDIT
+OP_MODE = OperatingMode.CHASE_CHECKING
 
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
@@ -123,10 +123,6 @@ def get_extracted_tx_folder_path():
     return os.path.join(get_base_folder_path(), "extracted_data")
 
 
-def get_manually_categorized_tx_folder_path():
-    return os.path.join(get_base_folder_path(), "manually_categorized_data")
-
-
 def get_raw_filenames(mode=OP_MODE):
     files_by_mode = {
         OperatingMode.OLD_CHASE_CREDIT: ["mirek_2018_raw.txt", "soph_2018_raw.txt"],
@@ -168,6 +164,10 @@ def load_from_file(filepath):
 
 
 def write_to_file(lines, filepath):
+    if not lines:
+        print "\nNo lines given, writing to {}".format(filepath)
+        return
+
     with open(filepath, "w") as f:
         for line in lines:
             f.write(line + "\n")
@@ -176,23 +176,32 @@ def write_to_file(lines, filepath):
 
 # TX-FORMAT SPECIFIC STUFF
 
-def run_extraction_loop(raw_data_folder_path, convert_to_tx_format_fn):
+def run_extraction_loop(convert_to_tx_format_fn, should_write_to_file=True):
     """ The main loop run by the "extraction" scripts. It's behavior is controlled by OP_MODE """
     optionally_create_dir(get_extracted_tx_folder_path())
+    
+    raw_data_folder_path = os.path.join(get_base_folder_path(), "raw_data")
+    final_lines = []
     for raw_filename in get_raw_filenames():
         raw_filepath = os.path.join(raw_data_folder_path, raw_filename)
         print "Running extraction loop for '{}'".format(raw_filepath)
 
         raw_lines_with_header = load_from_file(raw_filepath)
-        converted_tx_lines = convert_to_tx_format_fn(raw_lines_with_header)
+        converted_tx_lines = convert_to_tx_format_fn(raw_lines_with_header, raw_filename)
         filtered_tx_lines = filter_tx_lines(converted_tx_lines)
 
-        if filtered_tx_lines:
+        if not filtered_tx_lines:
+            print "No transactions from processing {}, nothing to export\n".format(raw_filename)
+            continue
+
+        if should_write_to_file:
             extracted_filepath = get_extracted_tx_filepath(raw_filename)
             write_to_file(filtered_tx_lines, extracted_filepath)
-        else:
-            print "No transactions from processing {}".format(raw_filename)
+            
+        final_lines += filtered_tx_lines
         print ""
+
+    return final_lines
 
 
 def filter_tx_lines(tx_lines):
@@ -230,10 +239,17 @@ def load_all_tx_lines():
 # SANITY CHECKS
 
 def check_tsv_tx_format(lines, with_category=False):
+    """
+    Our tx format is:
+    [DD/MM/YYYY]\t[description]\t[amount with 2 decimal places]\t[raw file source]'
+
+    If `with_category` is true, there's one more "category" column at the end
+    """
+
     leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
     number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
     end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
-    tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + end_of_line_exp
+    tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + r'\t.*' + end_of_line_exp
 
     for line in lines:
         if not re.match(tsv_tx_expr, line):

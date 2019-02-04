@@ -11,17 +11,17 @@ Usage:
 - make sure the resulting uncategorized tx file exists
 - tun this script
 """
-import datetime
 import os
 import spending_utils as utils
 
 new_folder = utils.get_base_folder_path(utils.OperatingMode.CHASE_CREDIT)
-with open(os.path.join(new_folder, "uncategorized_lines.tsv")) as f_new_uncat:
-    uncategorized_lines = f_new_uncat.read().splitlines()
+uncategorized_lines = utils.load_from_file(os.path.join(new_folder, "uncategorized_lines.tsv"))
 
 old_folder = utils.get_base_folder_path(utils.OperatingMode.OLD_CHASE_CREDIT)
-with open(os.path.join(old_folder, "manually_categorized_tx.tsv")) as f_old_cat:
-    old_manually_categorized = f_old_cat.read().splitlines()
+old_manually_categorized = utils.load_from_file(os.path.join(old_folder, "manually_categorized_tx.tsv"))
+
+if not uncategorized_lines or not old_manually_categorized:
+    raise Exception("Failed to load data")
 
 new_manually_categorized = []
 still_uncategorized = []
@@ -36,9 +36,9 @@ for line in uncategorized_lines:
         # old format has commas for thousands, new format doesn't
         if date in old_line and amt in old_line.replace(",", ""): # we have a match
             if not old_category:
-                old_category = old_line.split('\t')[3]
+                old_category = old_line.split('\t')[-1]
                 new_manually_categorized.append(line + "\t" + old_category)
-            elif old_category == old_line.split('\t')[3]:
+            elif old_category == old_line.split('\t')[-1]:
                 # duplicate match, but it has the same category so we're all good
                 continue
             else:

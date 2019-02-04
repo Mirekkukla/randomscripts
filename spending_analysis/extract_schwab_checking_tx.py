@@ -33,11 +33,10 @@ import spending_utils as utils
 
 
 def main():
-    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
-    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
+    utils.run_extraction_loop(convert_to_tx_format)
 
 
-def converted_to_tx_format(raw_lines_with_header):
+def convert_to_tx_format(raw_lines_with_header):
     """
     Input: list of tx lines in the raw format, e.g:
     "01/27/2019","ATM","","CSAS Taboritska 16/24 Praha","$50.17","","$56.26"
@@ -81,7 +80,7 @@ def tests():
     raw_withdrawal = '"01/27/2019","ATM","","WITHDRAWL YO","$50.17","","$1,256.26"'
     raw_deposit = '"01/26/2019","TRANSFER","","EARLIER DEPOSIT YO","","$1,000.00","$1,256.26"'
     expected = ['01/26/2019\tTRANSFER + EARLIER DEPOSIT YO\t-1,000.00', '01/27/2019\tATM + WITHDRAWL YO\t50.17']
-    converted = converted_to_tx_format(["header1", "header2", "header3", "header4", raw_withdrawal, raw_deposit])
+    converted = convert_to_tx_format(["header1", "header2", "header3", "header4", raw_withdrawal, raw_deposit])
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 

@@ -28,17 +28,16 @@ import spending_utils as utils
 
 
 def main():
-    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
-    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
+    utils.run_extraction_loop(convert_to_tx_format)
 
 
-def converted_to_tx_format(raw_lines_with_header):
+def convert_to_tx_format(raw_lines_with_header, source_filename):
     """
     Input: a head line followed by tx lines in the raw format, e.g:
     12/28/2018,12/31/2018,STICKERS ASIAN CAFE,Food & Drink,Sale,-11.50
 
     Output: list of "tx format" lines ordered by ascending date. Format:
-    [date]\t[description]\t[amount]
+    [date]\t[description]\t[amount]\t[source filename]
     """
     lines = raw_lines_with_header[1:]
     tsv_lines = []
@@ -51,7 +50,7 @@ def converted_to_tx_format(raw_lines_with_header):
         raw_amount_str = line.split(",")[5]
         flipped_amount_str = raw_amount_str[1:] if raw_amount_str[0] == "-" else "-{}".format(raw_amount_str)
 
-        tsv_line = "{}\t{}\t{}".format(date_str, desc_str, flipped_amount_str)
+        tsv_line = "{}\t{}\t{}\t{}".format(date_str, desc_str, flipped_amount_str, source_filename)
         tsv_lines.append(tsv_line)
 
     tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[0], '%m/%d/%Y'))
@@ -63,8 +62,8 @@ def tests():
     print "Running extraction test"
     simple_raw = "01/12/2018,01/14/2018,GEORGE'S FUEL &amp; AUTO,Gas,Sale,-7.61"
     postivie_amt = "01/11/2018,01/15/2018,TRAVEL CREDIT $300/YEAR,,Adjustment,208.07"
-    expected = ["01/11/2018\tTRAVEL CREDIT $300/YEAR\t-208.07", "01/12/2018\tGEORGE'S FUEL &amp; AUTO\t7.61"]
-    converted = converted_to_tx_format(["header", simple_raw, postivie_amt])
+    expected = ["01/11/2018\tTRAVEL CREDIT $300/YEAR\t-208.07\tyo.txt", "01/12/2018\tGEORGE'S FUEL &amp; AUTO\t7.61\tyo.txt"]
+    converted = convert_to_tx_format(["header", simple_raw, postivie_amt], "yo.txt")
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
     print "Test passed\n"

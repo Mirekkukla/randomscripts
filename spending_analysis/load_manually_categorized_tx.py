@@ -34,7 +34,7 @@ def load_categorized_tx(filepath):
 
     categorizations = {}
     for line in lines:
-        category = line.split("\t")[-1]
+        category = line.split("\t")[3]
         if not category:
             raise Exception("No category given: '{}'".format(line))
         if category not in utils.get_all_legal_categories():

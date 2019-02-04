@@ -30,17 +30,16 @@ import spending_utils as utils
 
 
 def main():
-    raw_data_folder_path = os.path.join(utils.get_base_folder_path(), "raw_data")
-    utils.run_extraction_loop(raw_data_folder_path, converted_to_tx_format)
+    utils.run_extraction_loop(convert_to_tx_format)
 
 
-def converted_to_tx_format(raw_lines_with_header):
+def convert_to_tx_format(raw_lines_with_header, source_filename):
     """
     Input: list of tx lines in the raw format, e.g:
     DEBIT,09/07/2018,"ATM WITHDRAWAL                       009775  09/07233 3RD A",-100.00,ATM,324.17,,
 
     Output: list of "tx format" lines ordered by ascending date. Format:
-    [date]\t[description with no surrounding quotes or outer whitespace]\t[amount]
+    [date]\t[description with no surrounding quotes or outer whitespace]\t[amount]\n[source filename]
     """
     lines = raw_lines_with_header[1:]
     tsv_lines = []
@@ -57,7 +56,7 @@ def converted_to_tx_format(raw_lines_with_header):
         raw_amount_str = post_desc_str.split(",")[1]
         flipped_amount_str = raw_amount_str[1:] if raw_amount_str[0] == "-" else "-{}".format(raw_amount_str)
 
-        tsv_line = "{}\t{}\t{}".format(date_str, desc_str, flipped_amount_str)
+        tsv_line = "{}\t{}\t{}\t{}".format(date_str, desc_str, flipped_amount_str, source_filename)
         tsv_lines.append(tsv_line)
 
     tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[0], '%m/%d/%Y'))
@@ -68,8 +67,8 @@ def tests():
     # converting raw lines: check sorting and handling of "extra" commas
     simple_raw = 'DEBIT,09/07/2018,"SIMPLE DESC",-100.00,ATM,324.17,,'
     raw_with_comma = 'DEBIT,09/06/2018,"EARLIER DATE, AND COMMA",-100.00,ATM,324.17,,'
-    expected = ['09/06/2018\tEARLIER DATE, AND COMMA\t100.00', '09/07/2018\tSIMPLE DESC\t100.00']
-    converted = converted_to_tx_format(["header", simple_raw, raw_with_comma])
+    expected = ['09/06/2018\tEARLIER DATE, AND COMMA\t100.00\tyo.txt', '09/07/2018\tSIMPLE DESC\t100.00\tyo.txt']
+    converted = convert_to_tx_format(["header", simple_raw, raw_with_comma], "yo.txt")
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 
