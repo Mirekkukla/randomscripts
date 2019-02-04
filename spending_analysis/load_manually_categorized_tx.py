@@ -1,5 +1,10 @@
 """
+Load the tsv file of manually-categorized tx that was copy/pasted
+from google docs. Make sure the format is reasonable.
 
+Load the full list of uncategorized tx. Make sure there every
+"manually" categorized tx actually matches an uncategorized
+tx in the source data.
 """
 
 import os
@@ -16,7 +21,7 @@ def main():
 def safely_get_manual_categorizations(lines):
     manual_tx_path = os.path.join(utils.get_base_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME)
     categorizations = load_categorized_tx(manual_tx_path)
-    # check_no_bogus_categorizations(categorizations, lines)
+    check_categorizations_coverage(categorizations, lines)
     return categorizations
 
 
@@ -43,7 +48,7 @@ def load_categorized_tx(filepath):
     return categorizations
 
 
-def check_no_bogus_categorizations(categorizations, lines):
+def check_categorizations_coverage(categorizations, lines):
     """ Makes sure every manual categorization corresponds to an actual tx """
     lines_as_set = set(lines)
     for categorized_line in categorizations.keys():

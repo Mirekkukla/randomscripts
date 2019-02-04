@@ -1,10 +1,15 @@
 """
-One-off script to port manual categorizations from the
-"old" chase credit format to the new
+One-off script to port manually categorized tx lines
+from th old chase credit format to the new
+
+Input: the old manual categorizations file and the new uncategorized lines file
+Output: a new manual categorizations file
 
 Usage:
-- make sure "old" manually categorized lines exist
-- run 
+- make sure "old" manually categorized tx file exists
+- run the "export uncategorized tx" script on the new data
+- make sure the resulting uncategorized tx file exists
+- tun this script
 """
 import datetime
 import os

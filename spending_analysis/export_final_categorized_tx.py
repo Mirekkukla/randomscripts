@@ -1,15 +1,12 @@
 """
-Load a clean tsv file of chase tx lines, as exported by `chase_extract_tx.py`.
-Import the categorization logic defined in
-Try to categorize each transaction by examining the description.
-- If we succeed, append a cell to the csv row with the category
-- If not, leave the row unchanged
-
-Export the resulting data as a new .tsv file
+Load a tsv file of un-categorized tx lines, as given by one of the "extract" scripts
+Load the tsv manually categorized tx
+Categorize the remaining transactions programatically based on description
+Export all categorized tx as a tsv file
 """
 
 import os
-import create_tx_categorizing_logic as auto_category_logic
+import export_uncategorized_tx as auto_category_logic
 import load_manual_categorized_tx as manual_category_logic
 import spending_utils as utils
 

@@ -1,30 +1,29 @@
 """
 This script helps you find keywords that can be used to categorize tx,
 and exports a list of transactions that don't get auto-categorized using
-the existing keywords.
+the existing keywords / manual categorizations.
 
-Input: a clean tsv file of chase tx lines, as exported by `chase_extract_credit_tx.py`
-Output: `UNCATEGORIZED_LINES_FILENAME` tsv file, consisting of lines that don't have coverage
+Input: a tsv file of tx lines, as exported by one of the "extract" scripts
+Output: tsv file of tx lines that don't have coverage
 
-
-Workflow:
-
-1. Find keywords that can be used to auto-categorize transactions:
+Workflow to find keywords that can be used to auto-categorize:
 - make sure `GREP_QUERY` is empty and run script
 - examine the printed distributions and choose a promising term
 - set the term as the value for `GREP_QUERY` and run script
 - if no false positives show up, add the term to the "terms" dictionary
 
-2. Creating manual overrides (once the term list is pretty fixed):
-- run this script (which will export `UNCATEGORIZED_LINES_FILENAME` tsv file)
-- paste the exported file contents into google sheets
+Once we're comfortable with our set of keywords (ie our "autocategorization" logic),
+we'll categorize remaining transactions manually.
+
+Categorizing transactions manually:
+- run this script (which will export a tsv file of remaining uncategorized tx)
+- paste the file contents into google sheets
 - categorize additional transactions manually in google sheets
-- copy contents from google sheets and replace contents of `MANUALLY_CATEGORIZED_FILENAME` using vim
+- copy contents from google sheets and replace contents of our "manually categorized tx" file using vim
   - (GOTCHA: sublime doesn't realize that ".tsv" means "use tab delimiters")
 - run this script again to ensure the resulting data is correctly fomatted
 
-3. If there are no more uncategorized transactions, the full list of categorized tx
-   is exported to `FINAL_CATEGORIZED_FILENAME`
+Once there are no more uncategorized transactions, you can run the final "export" script
 """
 
 import os
