@@ -1,5 +1,6 @@
 """
-One-off script to port manual categories fro the "old" chase credit format to the new
+One-off script to port manual categorizations from the
+"old" chase credit format to the new
 """
 
 
@@ -8,10 +9,10 @@ import datetime
 import os
 import spending_utils as utils
 
-with open(os.path.abspath("/Users/mirek/chase_extract_credit_data/uncategorized_lines.tsv")) as f:
+with open(os.path.abspath("/Users/{}/chase_extract_credit_data/uncategorized_lines.tsv".format(utils.USER))) as f:
     uncategorized_lines = f.read().splitlines()
 
-with open(os.path.abspath("/Users/mirek/old_chase_extract_credit_data/manually_categorized_tx.tsv")) as f:
+with open(os.path.abspath("/Users/{}/old_chase_extract_credit_data/manually_categorized_tx.tsv".format(utils.USER))) as f:
     old_categories_lines = f.read().splitlines()
 
 new_categorized = []
@@ -22,18 +23,12 @@ for line in uncategorized_lines:
     desc = line.split('\t')[1]
     amt = line.split('\t')[2]
 
-    # if "0162413155232" in line:
-    #     print "new"
-    #     print line.split("\t")
-
     match = None
     for old_line in old_categories_lines:
 
-        # if "0162413155232" in old_line:
-        #     print "old"
-        #     print old_line.split("\t")
-
-        if date in old_line and amt in old_line:
+        # old format has commas in the thousands, new format doesn't
+        amount_matches = amt in old_line or amt in old_line.replace(",", "")
+        if date in old_line and amount_matches:
             if not match:
                 match = old_line
                 new_categorized.append(line)
@@ -48,6 +43,6 @@ for line in uncategorized_lines:
 
 
 print still_uncategorized
-print "yay"
+print "Done"
 
 # with open(os.path.abspath("/Users/mirek/chase_extract_credit_data/manually_categorized_tx.tsv")) as f3:

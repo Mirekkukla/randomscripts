@@ -15,6 +15,8 @@ OP_MODE = OperatingMode.CHASE_CREDIT
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
 
+USER = "sophia" # TODO: do this less jank
+
 # TODO: randomize and check for multiple matches
 
 # terms with spaces are deliberate so as to minimize false positives
@@ -34,13 +36,13 @@ chase_credit_terms = {
 
     # coffee, restaurant, booze, store
     'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
-    'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ",
+    'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ", "pub\t",
           "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
           "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
           "PHO", "pizz", "REST", "TAVERN"],
-    'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT OLOMOUC", "BAR ", "hops",
+    'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT", "BAR ", "hops",
           "BOTTLE", " PIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
-          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL", "FRESHBAR", "Microbar"],
+          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL", "FRESHBAR", "bar\t"],
     'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
 
     # entertainment (gifts-books-games)
@@ -114,7 +116,7 @@ def get_base_folder_path(mode=OP_MODE):
         OperatingMode.SCHWAB_CHECKING: "schwab_extract_checking_data",
         OperatingMode.SCHWAB_BROKERAGE: "schwab_extract_brokerage_data"
     }
-    return os.path.abspath("/Users/mirek/" + folder_by_mode[mode])
+    return os.path.abspath("/Users/" + USER + "/" + folder_by_mode[mode])
 
 
 def get_extracted_tx_folder_path():
@@ -208,6 +210,7 @@ def filter_tx_lines(tx_lines):
     total_removed = len(tx_lines) - len(filtered_lines)
     print "Removed {} transactions".format(total_removed)
     return filtered_lines
+
 
 def load_all_tx_lines():
     print "Loading all extracted tx lines"
