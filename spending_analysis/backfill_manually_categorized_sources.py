@@ -1,6 +1,8 @@
 """
 Add "sources" to a manaully categorized tx file that was
-created without them. At the end there will still be 3
+created without them.
+
+For the old chase checking format, at the end there will still be 3
 lines you'll need to manually fix. These lines hava the same
 source / amt / date, but each comes from a different source
 (one from "mirek" and one from "soph"). As-is the script will
@@ -61,7 +63,7 @@ if old_manually_categorized_tx_lines[0].count("\t") != 3:
     raise Exception("Extracted line tab count is wrong, did you already backfill source?")
 
 # fix leading zeros issue for old format
-if utils.OP_MODE != utils.OperatingMode.CHASE_CREDIT:
+if utils.OP_MODE == utils.OperatingMode.OLD_CHASE_CREDIT:
     old_manually_categorized_tx_lines = \
         load_manually_categorized_tx.fix_gdocs_number_formatting(old_manually_categorized_tx_lines)
 

@@ -79,8 +79,8 @@ def tests():
     # converting raw lines: check sorting and handling of "extra" commas
     raw_withdrawal = '"01/27/2019","ATM","","WITHDRAWL YO","$50.17","","$1,256.26"'
     raw_deposit = '"01/26/2019","TRANSFER","","EARLIER DEPOSIT YO","","$1,000.00","$1,256.26"'
-    expected = ['01/26/2019\tTRANSFER + EARLIER DEPOSIT YO\t-1,000.00', '01/27/2019\tATM + WITHDRAWL YO\t50.17']
-    converted = convert_to_tx_format(["header1", "header2", "header3", "header4", raw_withdrawal, raw_deposit])
+    expected = ['01/26/2019\tTRANSFER + EARLIER DEPOSIT YO\t-1,000.00\tyo.txt', '01/27/2019\tATM + WITHDRAWL YO\t50.17\tyo.txt']
+    converted = convert_to_tx_format(["header1", "header2", "header3", "header4", raw_withdrawal, raw_deposit], "yo.txt")
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 

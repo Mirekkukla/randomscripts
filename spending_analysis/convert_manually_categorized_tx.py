@@ -23,6 +23,10 @@ old_manually_categorized = utils.load_from_file(os.path.join(old_folder, "manual
 if not uncategorized_lines or not old_manually_categorized:
     raise Exception("Failed to load data")
 
+new_categorized_filepath = os.path.join(new_folder, "manually_categorized_tx.tsv")
+if os.path.exists(new_categorized_filepath):
+    raise Exception("New manually categorized file shouldn't exist, that's what we're making")
+
 new_manually_categorized = []
 still_uncategorized = []
 for line in uncategorized_lines:
@@ -34,8 +38,13 @@ for line in uncategorized_lines:
     old_category = None
     for old_line in old_manually_categorized:
 
+        # old format takes in raw .txt files, new format takes in raw .csv files
+        sources_match = old_line and source.replace(".csv", ".txt")
         # old format has commas for thousands, new format doesn't
-        if date in old_line and source in old_line and amt in old_line.replace(",", ""): # we have a match
+        amt_wo_leading_zero = amt[1:] if amt[0] == "0" else amt
+        amounts_match = amt_wo_leading_zero in old_line.replace(",", "")
+
+        if date in old_line and sources_match and amounts_match: # we have a match!
             if not old_category:
                 old_category = old_line.split('\t')[-1]
                 new_manually_categorized.append(line + "\t" + old_category)
@@ -43,15 +52,14 @@ for line in uncategorized_lines:
                 # duplicate match, but it has the same category so we're all good
                 continue
             else:
-                raise Exception("Duplicate match for '{}': first match was '{}', second is '{}'".format(line, match, old_line))
+                raise Exception("Duplicate match for '{}': first match was '{}', second is '{}'".format(line, old_category, old_line))
     if not old_category:
         still_uncategorized.append(line)
 
 
 if not still_uncategorized:
     print "Wheee, all categorized"
-    new_categorized_filepath = os.path.join(new_folder, "manually_categorized_tx.tsv")
     utils.write_to_file(new_manually_categorized, new_categorized_filepath)
 else:
-    print "Remaining lines without matches:"
+    print "Remaining {} lines without matches:".format(len(still_uncategorized))
     print still_uncategorized

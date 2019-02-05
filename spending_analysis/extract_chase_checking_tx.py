@@ -25,7 +25,6 @@ Process:
 """
 
 import datetime
-import os
 import spending_utils as utils
 
 

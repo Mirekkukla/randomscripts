@@ -80,14 +80,15 @@ def tests():
     # converting raw lines: check sorting and handling of "extra" commas
     simple_raw_line = '"01/16/2019 as of 01/15/2019","Bank Interest","","WEIRD DATES","","","","$0.51",'
     harder_raw_line = '"04/16/2018","Buy","VTI","NEGATIVE AMOUNT, COMMA","110","$137.54","$4.95","-$15134.35",'
-    expected = ['04/16/2018\tBuy + NEGATIVE AMOUNT, COMMA\t15134.35', '01/15/2019\tBank Interest + WEIRD DATES\t-0.51']
-    converted = convert_to_tx_format(["header1", "header2", simple_raw_line, harder_raw_line])
+    expected = ['04/16/2018\tBuy + NEGATIVE AMOUNT, COMMA\t15134.35\tyo.txt',
+                '01/15/2019\tBank Interest + WEIRD DATES\t-0.51\tyo.txt']
+    converted = convert_to_tx_format(["header1", "header2", simple_raw_line, harder_raw_line], "yo.txt")
     if converted != expected:
         raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
 
 
 if __name__ == '__main__':
     if utils.OP_MODE != utils.OperatingMode.SCHWAB_BROKERAGE:
-        raise Exception("Can only run in schwab checking mode")
+        raise Exception("Can only run in schwab brokerage mode")
     tests()
     main()
