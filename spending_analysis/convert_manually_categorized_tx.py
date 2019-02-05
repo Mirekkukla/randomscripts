@@ -1,6 +1,6 @@
 """
 One-off script to port manually categorized tx lines
-from th old chase credit format to the new
+from the old chase credit format to the new
 
 Input: the old manual categorizations file and the new uncategorized lines file
 Output: a new manual categorizations file
@@ -29,12 +29,13 @@ for line in uncategorized_lines:
     date = line.split('\t')[0]
     desc = line.split('\t')[1]
     amt = line.split('\t')[2]
+    source = line.split('\t')[3]
 
     old_category = None
     for old_line in old_manually_categorized:
 
         # old format has commas for thousands, new format doesn't
-        if date in old_line and amt in old_line.replace(",", ""): # we have a match
+        if date in old_line and source in old_line and amt in old_line.replace(",", ""): # we have a match
             if not old_category:
                 old_category = old_line.split('\t')[-1]
                 new_manually_categorized.append(line + "\t" + old_category)

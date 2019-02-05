@@ -1,6 +1,16 @@
 """
 Add "sources" to a manaully categorized tx file that was
-created without them.
+created without them. At the end there will still be 3
+lines you'll need to manually fix. These lines hava the same
+source / amt / date, but each comes from a different source
+(one from "mirek" and one from "soph"). As-is the script will
+assign both versions the same source ("mirek")
+
+02/16/2018      USPS.COM MOVER'S GUIDE 800-238-3150 TN  1.00    mirek_2018_raw.txt
+03/07/2018      THE BARONESS LONG ISLAND C NY   31.40   mirek_2018_raw.txt
+03/08/2018      TST* THE GINGERMAN NEW YORK NY  25.23   mirek_2018_raw.txt
+
+Modify the resulting categorized file to have the above sources read "soph"
 """
 
 import os

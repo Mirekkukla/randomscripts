@@ -7,7 +7,7 @@ Export all categorized tx as a tsv file
 
 import os
 import export_uncategorized_tx as auto_category_logic
-import load_manual_categorized_tx as manual_category_logic
+import load_manually_categorized_tx as manual_category_logic
 import spending_utils as utils
 
 FINAL_CATEGORIZED_FILENAME = "final_categorized_tx.tsv"

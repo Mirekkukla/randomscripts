@@ -12,7 +12,7 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
 OP_MODE = OperatingMode.OLD_CHASE_CREDIT
 
-FIRST_TX_DATE = datetime.datetime(2018, 1, 1) # first day of joblessness
+FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
 
 USER = "sophia" # TODO: do this less jank

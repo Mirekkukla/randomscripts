@@ -29,7 +29,7 @@ Once there are no more uncategorized transactions, you can run the final "export
 import os
 import re
 import spending_utils as utils
-import load_manual_categorized_tx
+import load_manually_categorized_tx
 
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all un-categorized lines that match it)
@@ -43,7 +43,7 @@ def main():
     categorized_count = 0
 
     lines = utils.load_all_tx_lines()
-    categorizations = load_manual_categorized_tx.safely_get_manual_categorizations(lines)
+    categorizations = load_manually_categorized_tx.safely_get_manual_categorizations(lines)
 
     print "Categorizing all lines\n"
     for line in lines:
@@ -54,7 +54,7 @@ def main():
             continue
 
         # try auto-assign a category using term matching
-        # (unless we're "grepping" to find matches / detect false positives) 
+        # (unless we're "grepping" to find matches / detect false positives)
         if not GREP_QUERY and get_matching_category(line):
             match_count += 1
             continue
