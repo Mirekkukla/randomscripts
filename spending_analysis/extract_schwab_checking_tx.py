@@ -36,7 +36,7 @@ def main():
     utils.run_extraction_loop(convert_to_tx_format)
 
 
-def convert_to_tx_format(raw_lines_with_header):
+def convert_to_tx_format(raw_lines_with_header, source_filename):
     """
     Input: list of tx lines in the raw format, e.g:
     "01/27/2019","ATM","","CSAS Taboritska 16/24 Praha","$50.17","","$56.26"
@@ -68,7 +68,7 @@ def convert_to_tx_format(raw_lines_with_header):
         deposit_str = full_tsv_line.split('\t')[5]
         amt_str = withdrawal_str[1:] if withdrawal_str else "-" + deposit_str[1:] # remove leading "$"
 
-        tsv_line = "{}\t{}\t{}".format(date_str, combined_desc_str, amt_str)
+        tsv_line = "{}\t{}\t{}\t{}".format(date_str, combined_desc_str, amt_str, source_filename)
         tsv_lines.append(tsv_line)
 
     tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[0], '%m/%d/%Y'))

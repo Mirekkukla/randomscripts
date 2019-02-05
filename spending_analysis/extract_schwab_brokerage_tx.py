@@ -36,7 +36,7 @@ import spending_utils as utils
 def main():
     utils.run_extraction_loop(convert_to_tx_format)
 
-def convert_to_tx_format(raw_lines_with_header):
+def convert_to_tx_format(raw_lines_with_header, source_filename):
     """
     Input: list of header lines + tx lines in the raw format, e.g:
     "01/24/2019","Sell","VTI","VANGUARD TOTAL STOCK MARKET ETF","33","$134.93","$2.69","$4450.00",
@@ -69,7 +69,7 @@ def convert_to_tx_format(raw_lines_with_header):
         raw_amt_str = full_tsv_line.split('\t')[7].replace("$", "")
         flipped_amt_str = raw_amt_str[1:] if raw_amt_str[0] == "-" else "-{}".format(raw_amt_str)
 
-        tsv_line = "{}\t{}\t{}".format(date_str, combined_desc_str, flipped_amt_str)
+        tsv_line = "{}\t{}\t{}\t{}".format(date_str, combined_desc_str, flipped_amt_str, source_filename)
         tsv_lines.append(tsv_line)
 
     tsv_lines.sort(key=lambda l: datetime.datetime.strptime(l.split('\t')[0], '%m/%d/%Y'))

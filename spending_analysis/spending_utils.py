@@ -10,9 +10,9 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
     SCHWAB_BROKERAGE = 5
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
-OP_MODE = OperatingMode.CHASE_CHECKING
+OP_MODE = OperatingMode.OLD_CHASE_CREDIT
 
-FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
+FIRST_TX_DATE = datetime.datetime(2018, 1, 1) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
 
 USER = "sophia" # TODO: do this less jank
@@ -179,7 +179,7 @@ def write_to_file(lines, filepath):
 def run_extraction_loop(convert_to_tx_format_fn, should_write_to_file=True):
     """ The main loop run by the "extraction" scripts. It's behavior is controlled by OP_MODE """
     optionally_create_dir(get_extracted_tx_folder_path())
-    
+
     raw_data_folder_path = os.path.join(get_base_folder_path(), "raw_data")
     final_lines = []
     for raw_filename in get_raw_filenames():
@@ -197,7 +197,7 @@ def run_extraction_loop(convert_to_tx_format_fn, should_write_to_file=True):
         if should_write_to_file:
             extracted_filepath = get_extracted_tx_filepath(raw_filename)
             write_to_file(filtered_tx_lines, extracted_filepath)
-            
+
         final_lines += filtered_tx_lines
         print ""
 
@@ -245,7 +245,6 @@ def check_tsv_tx_format(lines, with_category=False):
 
     If `with_category` is true, there's one more "category" column at the end
     """
-
     leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
     number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
     end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
@@ -257,33 +256,3 @@ def check_tsv_tx_format(lines, with_category=False):
             raise Exception("Line not in tsv tx format, check number decimal points: [{}]".format(line))
 
     print "Passed tsv tx format check"
-
-
-def fix_gdocs_number_formatting(manually_categorized_lines):
-    """ Google docs prefixes a zero to amts < 1 dollar, remove it to match the export format"""
-    fixed_lines = []
-    for line in manually_categorized_lines:
-        [date_str, desc, amt_str, category] = line.split('\t')
-        if amt_str[0] != "0":
-            fixed_lines.append(line)
-            continue
-
-        fixed_amt_str = amt_str[1:]
-        fixed_line = '\t'.join([date_str, desc, fixed_amt_str, category])
-        fixed_lines.append(fixed_line)
-
-    return fixed_lines
-
-
-def tests():
-    # test gdocs format fixing
-    good_line = "02/21/2018\tI'M GOOD\t.88\tCNC"
-    bad_line = "02/21/2018\tNEED FIXING\t0.99\tCNC"
-    expected = ["02/21/2018\tI'M GOOD\t.88\tCNC", "02/21/2018\tNEED FIXING\t.99\tCNC"]
-    converted = fix_gdocs_number_formatting([good_line, bad_line])
-    if converted != expected:
-        raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
-
-
-# Tests run on import
-tests()
