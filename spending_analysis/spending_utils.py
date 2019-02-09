@@ -10,10 +10,12 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
     SCHWAB_BROKERAGE = 5
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
-OP_MODE = OperatingMode.CHASE_CREDIT
+# WARNING: this is a global var and gets changed by the final aggregate export script
+# GOTCHA: don't find this global as a default arg, otherwise it's initial value will get "fixed"!
+OP_MODE = OperatingMode.CHASE_CHECKING
 
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
-LAST_TX_DATE = datetime.datetime(2019, 1, 8) # last date we have data across all sources
+LAST_TX_DATE = datetime.datetime(2019, 1, 31) # last date we have data across all sources
 
 USER = "sophia" # TODO: do this less jank
 
@@ -28,7 +30,8 @@ chase_credit_terms = {
     'F': ["airline", "FRONTIER", " air ", "air\t", "UNITED 0", "UNITED      0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
     'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
     'UB': ["uber", "LYFT"],
-    'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB", "CHEVRON", "SHELL"],
+    'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB",
+           "CHEVRON", "SHELL", "JUMPBIKESHARESAMOLACA"],
 
     # housing, activities
     'H': ["AIRBNB", "hotel"],
@@ -55,7 +58,7 @@ chase_credit_terms = {
     # misc
     'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
     'MOV': [], # moving
-    'HLT': [], # insurance, doctors, etc
+    'HLT': ["World Nomads"], # insurance, doctors, etc
     'HMM': [], # sketchy shit
     'I': [] # unknown small charge, ignore
 }
@@ -76,7 +79,8 @@ chase_checking_terms = {
 schwab_checking_terms = {
     'CNC': ["TRANSFER", "ACH"],
     'ATM': ["ATM"],
-    'FEE': ["INTADJUST"]
+    'FEE': ["INTADJUST"],
+    'F': ["LAN.COM"]
 }
 
 schwab_brokerage_terms = {
@@ -87,7 +91,9 @@ schwab_brokerage_terms = {
 
 # TERM-SPECIFIC STUFF
 
-def get_terms(mode=OP_MODE):
+def get_terms(mode=None):
+    if not mode:
+        mode = OP_MODE
     terms_by_mode = {
         OperatingMode.OLD_CHASE_CREDIT: chase_credit_terms, # the "statement" input format
         OperatingMode.CHASE_CREDIT: chase_credit_terms,
@@ -108,7 +114,9 @@ def get_all_legal_categories():
 
 # PATH-RELATED STUFF
 
-def get_base_folder_path(mode=OP_MODE):
+def get_base_folder_path(mode=None):
+    if not mode:
+        mode = OP_MODE
     folder_by_mode = {
         OperatingMode.OLD_CHASE_CREDIT: "old_chase_extract_credit_data",
         OperatingMode.CHASE_CREDIT: "chase_extract_credit_data",
@@ -123,7 +131,9 @@ def get_extracted_tx_folder_path():
     return os.path.join(get_base_folder_path(), "extracted_data")
 
 
-def get_raw_filenames(mode=OP_MODE):
+def get_raw_filenames(mode=None):
+    if not mode:
+        mode = OP_MODE
     files_by_mode = {
         OperatingMode.OLD_CHASE_CREDIT: ["mirek_2018_raw.txt", "soph_2018_raw.txt"],
         OperatingMode.CHASE_CREDIT: ["mirek_2018_raw.csv", "soph_2018_raw.csv"],
@@ -134,7 +144,9 @@ def get_raw_filenames(mode=OP_MODE):
     return files_by_mode[mode]
 
 
-def get_extracted_tx_filepath(raw_filename, mode=OP_MODE):
+def get_extracted_tx_filepath(raw_filename, mode=None):
+    if not mode:
+        mode = OP_MODE
     raw_suffix = "raw.txt" if mode == OperatingMode.OLD_CHASE_CREDIT else "raw.csv"
     if raw_suffix not in raw_filename:
         raise Exception("Bad raw filename: '{}'".format(raw_filename))
