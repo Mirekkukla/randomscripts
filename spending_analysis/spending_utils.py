@@ -17,8 +17,6 @@ OP_MODE = OperatingMode.CHASE_CHECKING
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 LAST_TX_DATE = datetime.datetime(2019, 1, 31) # last date we have data across all sources
 
-USER = "sophia" # TODO: do this less jank
-
 # TODO: randomize and check for multiple matches
 
 # terms with spaces are deliberate so as to minimize false positives
@@ -124,7 +122,7 @@ def get_base_folder_path(mode=None):
         OperatingMode.SCHWAB_CHECKING: "schwab_extract_checking_data",
         OperatingMode.SCHWAB_BROKERAGE: "schwab_extract_brokerage_data"
     }
-    return os.path.abspath("/Users/" + USER + "/" + folder_by_mode[mode])
+    return os.path.join(os.path.expanduser("~"), folder_by_mode[mode])
 
 
 def get_extracted_tx_folder_path():
@@ -234,9 +232,10 @@ def filter_tx_lines(tx_lines):
 
 
 def load_all_tx_lines():
-    print "Loading all extracted tx lines"
+    raw_filenames = get_raw_filenames()
+    print "Loading all extracted tx lines from {}".format(raw_filenames)
     lines = []
-    for raw_filename in get_raw_filenames():
+    for raw_filename in raw_filenames:
         filepath_to_read = get_extracted_tx_filepath(raw_filename)
         lines += load_from_file(filepath_to_read)
 
