@@ -104,8 +104,10 @@ def sanity_check_countries(country_lines):
             prior_date = date
             continue
 
-        if not prior_date < date:
-            raise Exception("Prior from date {} isn't < current from date {}".format(prior_date, date))
+        if not prior_date <= date:
+            raise Exception("Prior date {} isn't < current date {} for {}".format(prior_date, date, country))
+
+        prior_date = date
 
     print "Loaded {} unique contries:".format(len(unique_countries))
     print sorted(unique_countries)
@@ -124,15 +126,27 @@ def sanity_check_date_overrides(basic_txs, date_overrides):
         raise Exception("Duplicate keys in date overrides {} != {}"
                         .format(len(date_overrides_keys), num_unique_keys))
 
+    utils.check_tsv_tx_format(date_overrides_keys, with_category=True)
+
     basix_tx_set = set(basic_txs)
-    for override_key in  date_overrides_keys:
+    for override_key in date_overrides_keys:
         if override_key not in basix_tx_set:
             raise Exception("Override key doesn't match any tx: {}".format(override_key))
 
     for line in date_overrides:
         original_date = get_date_at_index(line, 0)
         override_date = get_date_at_index(line, -1)
-        if override_date <= original_date:
+        if override_date < original_date:
+
+            # sometimes a hotel "charge" comes in after the "override date"
+            # since the payment is made at the end of the stay
+            date_diff = abs((original_date - override_date).days)
+            if date_diff < 5:
+                continue
+
+            # cancelations come well after the override date
+            if line.split('\t')[2][0] == "-":
+                continue
             raise Exception("Line has an override date {} prior to the original date {}:\n{}"
                             .format(override_date, original_date, line))
 

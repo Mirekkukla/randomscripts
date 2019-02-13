@@ -23,7 +23,6 @@ Process:
 """
 
 import datetime
-import os
 import spending_utils as utils
 
 
@@ -46,7 +45,7 @@ def convert_to_tx_format(raw_lines_with_header, source_filename):
             raise Exception("Line has more than the 5 commas: '{}'".format(line))
 
         date_str = line.split(",")[0]
-        desc_str = line.split(",")[2]
+        desc_str = line.split(",")[2].strip()
         raw_amount_str = line.split(",")[5]
         flipped_amount_str = raw_amount_str[1:] if raw_amount_str[0] == "-" else "-{}".format(raw_amount_str)
 

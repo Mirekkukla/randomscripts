@@ -12,10 +12,12 @@ class OperatingMode(object): #pylint: disable=too-few-public-methods
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
 # WARNING: this is a global var and gets changed by the final aggregate export script
 # GOTCHA: don't find this global as a default arg, otherwise it's initial value will get "fixed"!
-OP_MODE = OperatingMode.CHASE_CHECKING
+OP_MODE = OperatingMode.CHASE_CREDIT
 
 FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
-LAST_TX_DATE = datetime.datetime(2019, 1, 31) # last date we have data across all sources
+
+# NOTE: we're effectively not using the last tx date anymore
+LAST_TX_DATE = datetime.datetime(9999, 12, 31) # last date we have data across all sources
 
 # TODO: randomize and check for multiple matches
 
