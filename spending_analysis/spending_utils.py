@@ -19,6 +19,8 @@ FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
 # NOTE: we're effectively not using the last tx date anymore
 LAST_TX_DATE = datetime.datetime(9999, 12, 31) # last date we have data across all sources
 
+BASE_FOLDER = os.path.join(os.path.expanduser("~"), "spending_analysis")
+
 # TODO: randomize and check for multiple matches
 
 # terms with spaces are deliberate so as to minimize false positives
@@ -115,7 +117,7 @@ def get_all_legal_categories():
 
 # PATH-RELATED STUFF
 
-def get_base_folder_path(mode=None):
+def get_single_source_folder_path(mode=None):
     if not mode:
         mode = OP_MODE
     folder_by_mode = {
@@ -125,13 +127,13 @@ def get_base_folder_path(mode=None):
         OperatingMode.SCHWAB_CHECKING: "schwab_extract_checking_data",
         OperatingMode.SCHWAB_BROKERAGE: "schwab_extract_brokerage_data"
     }
-    return os.path.join(os.path.expanduser("~"), folder_by_mode[mode])
+    return os.path.join(BASE_FOLDER, folder_by_mode[mode])
 
-def get_final_folder_path():
-    return os.path.join(os.path.expanduser("~"), "final_spending")
+def get_aggregate_folder_path():
+    return os.path.join(BASE_FOLDER, "aggregate_data")
 
 def get_extracted_tx_folder_path():
-    return os.path.join(get_base_folder_path(), "extracted_data")
+    return os.path.join(get_single_source_folder_path(), "extracted_data")
 
 
 def get_raw_filenames(mode=None):
@@ -195,7 +197,7 @@ def run_extraction_loop(convert_to_tx_format_fn, should_write_to_file=True):
     """ The main loop run by the "extraction" scripts. It's behavior is controlled by OP_MODE """
     optionally_create_dir(get_extracted_tx_folder_path())
 
-    raw_data_folder_path = os.path.join(get_base_folder_path(), "raw_data")
+    raw_data_folder_path = os.path.join(get_single_source_folder_path(), "raw_data")
     final_lines = []
     for raw_filename in get_raw_filenames():
         raw_filepath = os.path.join(raw_data_folder_path, raw_filename)

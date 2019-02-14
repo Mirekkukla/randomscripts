@@ -35,8 +35,8 @@ extraction_fn_by_mode = {
     utils.OperatingMode.SCHWAB_BROKERAGE: extract_schwab_brokerage_tx.convert_to_tx_format,
 }
 
-old_filepath = os.path.join(utils.get_base_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME)
-new_filepath = os.path.join(utils.get_base_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME + "_new")
+old_filepath = os.path.join(utils.get_single_source_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME)
+new_filepath = os.path.join(utils.get_single_source_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME + "_new")
 
 source_by_line = {}
 

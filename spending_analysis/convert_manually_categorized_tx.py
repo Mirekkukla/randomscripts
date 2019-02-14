@@ -14,10 +14,10 @@ Usage:
 import os
 import spending_utils as utils
 
-new_folder = utils.get_base_folder_path(utils.OperatingMode.CHASE_CREDIT)
+new_folder = utils.get_single_source_folder_path(utils.OperatingMode.CHASE_CREDIT)
 uncategorized_lines = utils.load_from_file(os.path.join(new_folder, "uncategorized_lines.tsv"))
 
-old_folder = utils.get_base_folder_path(utils.OperatingMode.OLD_CHASE_CREDIT)
+old_folder = utils.get_single_source_folder_path(utils.OperatingMode.OLD_CHASE_CREDIT)
 old_manually_categorized = utils.load_from_file(os.path.join(old_folder, "manually_categorized_tx.tsv"))
 
 if not uncategorized_lines or not old_manually_categorized:
