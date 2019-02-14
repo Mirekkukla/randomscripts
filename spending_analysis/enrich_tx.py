@@ -123,6 +123,8 @@ def sanity_check_date_overrides(basic_txs, date_overrides):
     date_overrides_keys = [l.rsplit("\t", 1)[0] for l in date_overrides]
     num_unique_keys = len(set(date_overrides_keys))
     if len(date_overrides_keys) != num_unique_keys:
+        print "Dupe key(s):"
+        print set([x for x in date_overrides_keys if date_overrides_keys.count(x) > 1])
         raise Exception("Duplicate keys in date overrides {} != {}"
                         .format(len(date_overrides_keys), num_unique_keys))
 
@@ -144,8 +146,9 @@ def sanity_check_date_overrides(basic_txs, date_overrides):
             if date_diff < 5:
                 continue
 
-            # cancelations come well after the override date
-            if line.split('\t')[2][0] == "-":
+            # cancelations and venmoish payments come well after the override date
+            is_venmoish = any(s in line for s in ["VENMO", "SQC", "Zelle"])
+            if line.split('\t')[2][0] == "-" or is_venmoish:
                 continue
             raise Exception("Line has an override date {} prior to the original date {}:\n{}"
                             .format(override_date, original_date, line))

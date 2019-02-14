@@ -23,12 +23,13 @@ LAST_TX_DATE = datetime.datetime(9999, 12, 31) # last date we have data across a
 
 # terms with spaces are deliberate so as to minimize false positives
 # terms with substrinfs of read words are meant to capture variations on a word
+# GOTCAH: make sure to escape special chars, as these will be part of a regex
 chase_credit_terms = {
     'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
 
     # flight, train, uber, other transport
-    'F': ["airline", "FRONTIER", " air ", "air\t", "UNITED 0", "UNITED      0", "PEGASUS", "NORWEGIAN", "KIWI.COM", "RYANAIR"],
-    'TR': ["WWW.CD.CZ", "AMTRAK", "LE.CZ", "CALTRAIN"],
+    'F': ["airline", "FRONTIER", " air ", "air\t", "UNITED 0", "UNITED      0", "PEGASUS", "NORWEGIAN", r"KIWI\.COM", "RYANAIR"],
+    'TR': [r"WWW\.CD\.CZ", "AMTRAK", r"LE\.CZ", "CALTRAIN"],
     'UB': ["uber", "LYFT"],
     'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB",
            "CHEVRON", "SHELL", "JUMPBIKESHARESAMOLACA"],
@@ -49,15 +50,15 @@ chase_credit_terms = {
     'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
 
     # entertainment (gifts-books-games)
-    'E': ["AMAZON", "POWELL", "NINTENDO", "GOPAY.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
+    'E': ["AMAZON", "POWELL", "NINTENDO", r"GOPAY\.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
     # body (clothes-hair-spa),
     'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
-    # digital (vpn-spotify-website-phone)
-    'DIG': ["AVNGATE", "Spotify", "GHOST", "google"],
+    # subscription (vpn-spotify-website-phone)
+    'SUB': ["AVNGATE", "Spotify", "GHOST", "PROJECT FI", "Google Fi"],
 
     # misc
-    'EDU': ["CZLT.CZ"], # language-course / EFT course / license renewal
-    'MOV': [], # moving
+    'ONE': ["Google Storage", r"GOOGLE \*Domains"], # one-offs (laptop, phone)
+    'EDU': [r"CZLT\.CZ"], # language-course / EFT course / license renewal
     'HLT': ["World Nomads"], # insurance, doctors, etc
     'HMM': [], # sketchy shit
     'I': [] # unknown small charge, ignore
@@ -67,7 +68,7 @@ chase_checking_terms = {
     'CNC': ["CHASE CREDIT CRD AUTOPAY", "SCHWAB", "DEPOSIT", "TRANSFER", "TAX", "C PAYROLL",
             "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY"],
     'ATM': ["ATM", "CHECK_PAID"],
-    'MOV': ["WIRE FEE", "Pacific Gas"],
+    'ONE': ["WIRE FEE", "Pacific Gas"],
     'FEE': ["ATM FEE", "ADJUSTMENT FEE", "SERVICE FEE", "COUNTER CHECK"],
     'SQR': ["SQC*", "VENMO", "payment from SUZANNE", "payment to Mom", "payment to Suzy"],
     'F': ["NORWEGIAN", "EXPEDIA"],
@@ -126,6 +127,8 @@ def get_base_folder_path(mode=None):
     }
     return os.path.join(os.path.expanduser("~"), folder_by_mode[mode])
 
+def get_final_folder_path():
+    return os.path.join(os.path.expanduser("~"), "final_spending")
 
 def get_extracted_tx_folder_path():
     return os.path.join(get_base_folder_path(), "extracted_data")

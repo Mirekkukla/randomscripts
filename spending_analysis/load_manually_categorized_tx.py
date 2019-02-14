@@ -10,7 +10,7 @@ tx in the source data.
 import os
 import spending_utils as utils
 
-MANUALLY_CATEGORIZED_TX_FILENAME = "manually_categorized_tx.tsv"
+MANUALLY_CATEGORIZED_TX_FILENAME = "category_overrides.tsv"
 
 def main():
     print "RUNNING FROM MAIN: only loads categorizations to sanity check all is well\n"
@@ -19,7 +19,7 @@ def main():
 
 
 def safely_get_manual_categorizations(lines):
-    manual_tx_path = os.path.join(utils.get_base_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME)
+    manual_tx_path = os.path.join(utils.get_final_folder_path(), MANUALLY_CATEGORIZED_TX_FILENAME)
     categorizations = load_categorized_tx(manual_tx_path)
     check_categorizations_coverage(categorizations, lines)
     return categorizations
@@ -36,6 +36,11 @@ def load_categorized_tx(filepath):
 
     categorizations = {}
     for line in lines:
+        source = line.split("\t")[3]
+        filenames = utils.get_raw_filenames()
+        if source not in filenames:
+            continue
+
         category = line.split("\t")[-1]
         if not category:
             raise Exception("No category given: '{}'".format(line))

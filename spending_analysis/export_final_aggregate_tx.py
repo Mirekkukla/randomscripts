@@ -9,7 +9,7 @@ import export_final_categorized_tx
 import spending_utils as utils
 from spending_utils import OperatingMode as OPMode
 
-final_filepath = os.path.join(os.path.expanduser("~"), "final_spending", "all_tx.tsv")
+final_filepath = os.path.join(utils.get_final_folder_path(), "all_tx.tsv")
 
 def main():
     all_lines = []
