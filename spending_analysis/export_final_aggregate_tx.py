@@ -5,9 +5,9 @@ file we can backup on google docs.
 """
 
 import os
-import export_final_categorized_tx
-import spending_utils as utils
-from spending_utils import OperatingMode as OPMode
+from source_logic import export_final_categorized_tx
+from source_logic import spending_utils as utils
+from source_logic.spending_utils import OperatingMode as OPMode
 
 final_filepath = os.path.join(utils.get_aggregate_folder_path(), "all_tx.tsv")
 

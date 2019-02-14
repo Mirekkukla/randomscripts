@@ -20,15 +20,13 @@ for that country. Must be in chronological order
 
 import os
 import datetime
-import spending_utils as utils
+from source_logic import spending_utils as utils
 
-folder_path = os.path.join(os.path.expanduser("~"), "final_spending")
+basic_tx_path = os.path.join(utils.get_aggregate_folder_path(), "all_tx.tsv")
+enriched_tx_path = os.path.join(utils.get_aggregate_folder_path(), "enriched_tx.tsv")
 
-basic_tx_path = os.path.join(folder_path, "all_tx.tsv")
-enriched_tx_path = os.path.join(folder_path, "enriched_tx.tsv")
-
-date_overrides_path = os.path.join(folder_path, "date_overrides.tsv")
-countries_path = os.path.join(folder_path, "countries.tsv")
+date_overrides_path = os.path.join(utils.get_aggregate_folder_path(), "date_overrides.tsv")
+countries_path = os.path.join(utils.get_aggregate_folder_path(), "countries.tsv")
 
 
 def main():
