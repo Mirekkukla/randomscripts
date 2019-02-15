@@ -49,7 +49,8 @@ chase_credit_terms = {
     'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT", "BAR ", "hops",
           "BOTTLE", " PIV", "\tPIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
           "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL", "FRESHBAR", "bar\t", "FONTEINEN"],
-    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS", "FOOD", "RITE"],
+    'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS",
+          "FOOD", "RITE", "MERCADO"],
 
     # entertainment (gifts-books-games)
     'E': ["AMAZON", "POWELL", "NINTENDO", r"GOPAY\.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],

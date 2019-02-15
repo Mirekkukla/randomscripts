@@ -34,7 +34,7 @@ import load_manually_categorized_tx
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all lines (that aren't manually categorized) that match it)
 # GOTCHA: this is used in a regex, so carefeul with special chars like "*"
-GREP_QUERY = "MERCADO"
+GREP_QUERY = ""
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
 

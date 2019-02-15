@@ -200,7 +200,7 @@ def sanity_check_date_overrides(basic_txs, date_overrides):
     basix_tx_set = set(basic_txs)
     for override_key in date_overrides_keys:
         if override_key not in basix_tx_set:
-            raise Exception("Override key doesn't match any tx: {}".format(override_key))
+            raise Exception("Date override key doesn't match any tx: {}".format(override_key))
 
     for line in date_overrides:
         original_date = get_date_at_index(line, 0)
@@ -214,11 +214,34 @@ def sanity_check_date_overrides(basic_txs, date_overrides):
                 continue
 
             # cancelations and venmoish payments come well after the override date
+            # can't just check "category" b/c some venmoish payments gets re-categorized as activities etc
             is_venmoish = any(s in line for s in ["VENMO", "SQC", "Zelle"])
             if line.split('\t')[2][0] == "-" or is_venmoish:
                 continue
             raise Exception("Line has an override date {} prior to the original date {}:\n{}"
                             .format(override_date, original_date, line))
+
+    # make sure all flights, hotels, and large venmoish txs have a date overrides entry
+    date_overrides_set = set(date_overrides_keys)
+    missing_overrides_entries = []
+    for line in basic_txs:
+        category = line.split("\t")[-1]
+        amt = float(line.split("\t")[2].replace(",", ""))
+        is_large_sqr = category == "SQR" and amt > 100
+        if category != "F" and category != "H" and not is_large_sqr:
+            continue
+
+        if line not in date_overrides_set:
+            missing_overrides_entries.append(line)
+
+    missing_entries_path = os.path.join(utils.get_aggregate_folder_path(), "missing_date_entries.tsv")
+    if missing_overrides_entries:
+        utils.write_to_file(missing_overrides_entries, missing_entries_path)
+        raise Exception("Some flight / hotel / large SQR tx doesn't have an date override entry, see above")
+
+    if os.path.exists(missing_entries_path):
+        print "Nuking existing 'missing override entries' file at {}".format(missing_entries_path)
+        os.remove(missing_entries_path)
 
     print "Passed date overrides sanity check"
 
