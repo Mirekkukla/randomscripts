@@ -20,9 +20,11 @@ for that country. Must be in chronological order
 
 import os
 import datetime
-from spending_analysis.source_logic import spending_utils as utils
+from source_logic import spending_utils as utils
+from source_logic import export_final_categorized_tx
+from source_logic.spending_utils import OperatingMode as OPMode
 
-basic_tx_path = os.path.join(utils.get_aggregate_folder_path(), "all_tx.tsv")
+aggregate_tx_path = os.path.join(utils.get_aggregate_folder_path(), "aggregate_tx.tsv")
 enriched_tx_path = os.path.join(utils.get_aggregate_folder_path(), "enriched_tx.tsv")
 
 date_overrides_path = os.path.join(utils.get_aggregate_folder_path(), "date_overrides.tsv")
@@ -30,9 +32,11 @@ countries_path = os.path.join(utils.get_aggregate_folder_path(), "countries.tsv"
 
 
 def main():
-    basic_txs = utils.load_from_file(basic_tx_path)
+    export_aggregate_tx()
+    aggregate_txs = utils.load_from_file(aggregate_tx_path)
+
     date_overrides = utils.load_from_file(date_overrides_path)
-    sanity_check_date_overrides(basic_txs, date_overrides)
+    sanity_check_date_overrides(aggregate_txs, date_overrides)
 
     country_lines = utils.load_from_file(countries_path)
     sanity_check_countries(country_lines)
@@ -40,7 +44,7 @@ def main():
     date_override_by_tx = {l.rsplit("\t", 1)[0] : l.split("\t")[-1] for l in date_overrides}
 
     enriched_txs = []
-    for tx in basic_txs:
+    for tx in aggregate_txs:
 
         fixed_date_str = tx.split('\t')[0]
         if tx in date_override_by_tx:
@@ -54,6 +58,24 @@ def main():
         enriched_txs.append(enriched_tx)
 
     utils.write_to_file(enriched_txs, enriched_tx_path)
+
+
+def export_aggregate_tx():
+    """
+    Create a single final with (un-enriched) categorized tx aggreagted across
+    numerous operating modes.
+    """
+    all_lines = []
+    old_op_mode = utils.OP_MODE
+    for op_mode in [OPMode.CHASE_CREDIT, OPMode.CHASE_CHECKING, OPMode.SCHWAB_CHECKING]:
+        # HACK: global vars are evil
+        print "HACK: former OP_MODE value was {}, changing to {}".format(utils.OP_MODE, op_mode)
+        utils.OP_MODE = op_mode
+        all_lines += export_final_categorized_tx.get_final_lines()
+    utils.OP_MODE = old_op_mode
+
+    print "Loaded all {} lines".format(len(all_lines))
+    utils.write_to_file(all_lines, aggregate_tx_path)
 
 
 def get_country(country_lines, tx_date_str):
