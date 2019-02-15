@@ -178,7 +178,7 @@ def sanity_check_countries(country_lines):
 
     print "Loaded {} unique contries:".format(len(unique_countries))
     print sorted(unique_countries)
-    print "Pased country lines check"
+    print "Passed country lines check"
 
 
 def sanity_check_date_overrides(basic_txs, date_overrides):

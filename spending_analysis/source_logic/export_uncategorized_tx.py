@@ -28,8 +28,8 @@ Once there are no more uncategorized transactions, you can run the final "export
 
 import os
 import re
-import spending_utils as utils
-import load_manually_categorized_tx
+import source_logic.spending_utils as utils
+import source_logic.load_manually_categorized_tx as load_manually_categorized_tx
 
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all lines (that aren't manually categorized) that match it)

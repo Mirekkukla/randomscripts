@@ -30,7 +30,7 @@ Process:
 """
 
 import datetime
-import spending_utils as utils
+import source_logic.spending_utils as utils
 
 def main():
     utils.run_extraction_loop(convert_to_tx_format)

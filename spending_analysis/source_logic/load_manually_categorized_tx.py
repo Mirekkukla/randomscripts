@@ -8,7 +8,7 @@ tx in the source data.
 """
 
 import os
-import spending_utils as utils
+import source_logic.spending_utils as utils
 
 MANUALLY_CATEGORIZED_TX_FILENAME = "category_overrides.tsv"
 

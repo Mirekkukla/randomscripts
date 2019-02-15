@@ -23,9 +23,9 @@ BASE_FOLDER = os.path.join(os.path.expanduser("~"), "spending_analysis")
 
 # TODO: randomize and check for multiple matches
 
-# terms with spaces are deliberate so as to minimize false positives
-# terms with substrinfs of read words are meant to capture variations on a word
-# GOTCAH: make sure to escape special chars, as these will be part of a regex
+# terms with surrounding whitespace are deliberate so as to minimize false positives
+# terms with substrings of read words are meant to capture variations on a word
+# GOTCHA: make sure to escape special chars, as these will be part of a regex
 chase_credit_terms = {
     'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
 
@@ -163,12 +163,6 @@ def get_extracted_tx_filepath(raw_filename, mode=None):
 
 # FILE READING / WRITING
 
-def optionally_create_dir(dir_path):
-    if not os.path.exists(dir_path):
-        print "Folder at '{}' doesn't exist, creating it".format(dir_path)
-        os.makedirs(dir_path)
-
-
 def load_from_file(filepath):
     if not os.path.exists(filepath):
         print "No file at {}, ignoring".format(filepath)
@@ -196,7 +190,10 @@ def write_to_file(lines, filepath):
 
 def run_extraction_loop(convert_to_tx_format_fn, should_write_to_file=True):
     """ The main loop run by the "extraction" scripts. It's behavior is controlled by OP_MODE """
-    optionally_create_dir(get_extracted_tx_folder_path())
+    extracted_folder_path = get_extracted_tx_folder_path()
+    if not os.path.exists(extracted_folder_path):
+        print "Folder at '{}' doesn't exist, creating it".format(extracted_folder_path)
+        os.makedirs(extracted_folder_path)
 
     raw_data_folder_path = os.path.join(get_single_source_folder_path(), "raw_data")
     final_lines = []
