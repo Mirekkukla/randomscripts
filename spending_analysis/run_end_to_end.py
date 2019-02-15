@@ -20,8 +20,15 @@ for that country. Must be in chronological order
 
 import os
 import datetime
-from source_logic import spending_utils as utils
-from source_logic import export_final_categorized_tx
+import source_logic.spending_utils as utils
+
+import source_logic.extract_chase_credit_tx as extract_chase_credit_tx
+import source_logic.extract_chase_checking_tx as extract_chase_checking_tx
+import source_logic.extract_schwab_checking_tx as extract_schwab_checking_tx
+
+import source_logic.export_uncategorized_tx as export_uncategorized_tx
+import source_logic.export_final_categorized_tx as export_final_categorized_tx
+
 from source_logic.spending_utils import OperatingMode as OPMode
 
 aggregate_tx_path = os.path.join(utils.get_aggregate_folder_path(), "aggregate_tx.tsv")
@@ -32,7 +39,11 @@ countries_path = os.path.join(utils.get_aggregate_folder_path(), "countries.tsv"
 
 
 def main():
-    export_aggregate_tx()
+
+    extract_all_txs()
+    export_all_uncategorized()
+
+    aggregate_exported_txs()
     aggregate_txs = utils.load_from_file(aggregate_tx_path)
 
     date_overrides = utils.load_from_file(date_overrides_path)
@@ -60,22 +71,58 @@ def main():
     utils.write_to_file(enriched_txs, enriched_tx_path)
 
 
-def export_aggregate_tx():
+def extract_all_txs():
+    """
+    Run extraction logic for all sources
+    """
+    def exporter_fn():
+        export_fn_by_mode = {
+            OPMode.CHASE_CREDIT: extract_chase_credit_tx.main,
+            OPMode.CHASE_CHECKING: extract_chase_checking_tx.main,
+            OPMode.SCHWAB_CHECKING: extract_schwab_checking_tx.main
+        }
+        export_fn_by_mode[utils.OP_MODE]()
+
+    run_for_all_op_modes(exporter_fn)
+
+
+def export_all_uncategorized():
+    """
+    Exporting uncategorized tx for all modes. Quit at the first mode we encounter
+    uncategorized tx at. If there are no uncategorized tx we simply proceed.
+    """
+    def export_uncategorized_fn():
+        [uncategorized_lines, uncategorized_lines_filepath] = export_uncategorized_tx.main()
+        if uncategorized_lines:
+            print "Uncategorized lines for {}, see file at\n{}".format(utils.OP_MODE, uncategorized_lines_filepath)
+            exit(0)
+
+    run_for_all_op_modes(export_uncategorized_fn)
+
+
+def aggregate_exported_txs():
     """
     Create a single final with (un-enriched) categorized tx aggreagted across
     numerous operating modes.
     """
     all_lines = []
+    def aggregator_closure_fn():
+        all_lines.extend(export_final_categorized_tx.get_final_lines())
+
+    run_for_all_op_modes(aggregator_closure_fn)
+    print "Loaded all {} lines".format(len(all_lines))
+    utils.write_to_file(all_lines, aggregate_tx_path)
+
+
+def run_for_all_op_modes(fn):
     old_op_mode = utils.OP_MODE
     for op_mode in [OPMode.CHASE_CREDIT, OPMode.CHASE_CHECKING, OPMode.SCHWAB_CHECKING]:
         # HACK: global vars are evil
         print "HACK: former OP_MODE value was {}, changing to {}".format(utils.OP_MODE, op_mode)
         utils.OP_MODE = op_mode
-        all_lines += export_final_categorized_tx.get_final_lines()
+        fn()
+    print "HACK: return OP_MODE to {}".format(old_op_mode)
     utils.OP_MODE = old_op_mode
-
-    print "Loaded all {} lines".format(len(all_lines))
-    utils.write_to_file(all_lines, aggregate_tx_path)
 
 
 def get_country(country_lines, tx_date_str):

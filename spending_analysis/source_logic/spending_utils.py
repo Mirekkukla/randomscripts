@@ -267,7 +267,6 @@ def check_tsv_tx_format(lines, with_category=False):
     number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
     end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
     tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + r'\t.*' + end_of_line_exp
-
     for line in lines:
         if not re.match(tsv_tx_expr, line):
             print "Split on tab: {}".format(line.split('\t'))

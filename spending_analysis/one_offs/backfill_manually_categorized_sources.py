@@ -19,12 +19,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 #pylint: disable=wrong-import-position
-from source_logic import spending_utils as utils
-from source_logic import load_manually_categorized_tx
-from source_logic import extract_old_chase_credit_tx
-from source_logic import extract_chase_checking_tx
-from source_logic import extract_schwab_checking_tx
-from source_logic import extract_schwab_brokerage_tx
+import source_logic.spending_utils as utils
+import source_logic.load_manually_categorized_tx as load_manually_categorized_tx
+import source_logic.extract_old_chase_credit_tx as extract_old_chase_credit_tx
+import source_logic.extract_chase_checking_tx as extract_chase_checking_tx
+import source_logic.extract_schwab_checking_tx as extract_schwab_checking_tx
+import source_logic.extract_schwab_brokerage_tx as extract_schwab_brokerage_tx
 from source_logic.load_manually_categorized_tx import MANUALLY_CATEGORIZED_TX_FILENAME
 #pylint: enable=wrong-import-position
 

@@ -25,7 +25,7 @@ Process:
 """
 
 import datetime
-from source_logic import spending_utils as utils
+import spending_utils as utils
 
 
 def main():

@@ -43,7 +43,7 @@ The "description" and "amount" strings should be as given in the raw tx line
 
 import datetime
 import re
-from source_logic import spending_utils as utils
+import spending_utils as utils
 
 
 def main():

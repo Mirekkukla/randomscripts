@@ -28,13 +28,13 @@ Once there are no more uncategorized transactions, you can run the final "export
 
 import os
 import re
-from source_logic import spending_utils as utils
-from source_logic import load_manually_categorized_tx
+import spending_utils as utils
+import load_manually_categorized_tx
 
 # MODIFY THIS WHILE ITERATING
 # (We'll print out all lines (that aren't manually categorized) that match it)
 # GOTCHA: this is used in a regex, so carefeul with special chars like "*"
-GREP_QUERY = ""
+GREP_QUERY = "MERCADO"
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
 
@@ -90,6 +90,8 @@ def main():
         if os.path.isfile(uncategorized_lines_filepath):
             print "Nuking existing file at {}".format(uncategorized_lines_filepath)
             os.remove(uncategorized_lines_filepath)
+
+    return [uncategorized_lines, uncategorized_lines_filepath]
 
 
 # TEXT PROCESSING

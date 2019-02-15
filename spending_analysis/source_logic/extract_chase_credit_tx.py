@@ -23,7 +23,7 @@ Process:
 """
 
 import datetime
-from source_logic import spending_utils as utils
+import spending_utils as utils
 
 
 def main():
@@ -71,5 +71,6 @@ def tests():
 if __name__ == '__main__':
     if utils.OP_MODE != utils.OperatingMode.CHASE_CREDIT:
         raise Exception("Can only run in chase credit mode")
+
     tests()
     main()
