@@ -24,8 +24,14 @@ Process:
   - run script
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
+
+#pylint: disable=wrong-import-position
 import datetime
 import source_logic.spending_utils as utils
+#pylint: enable=wrong-import-position
 
 
 def main():

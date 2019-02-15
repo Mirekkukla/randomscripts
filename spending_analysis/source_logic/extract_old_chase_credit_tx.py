@@ -41,10 +41,15 @@ The "date" string should be format MM/DD/YYYY (we'll have to infer the year)
 The "description" and "amount" strings should be as given in the raw tx line
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
+
+#pylint: disable=wrong-import-position
 import datetime
 import re
 import source_logic.spending_utils as utils
-
+#pylint: enable=wrong-import-position
 
 def main():
     utils.run_extraction_loop(convert_to_tx_format)

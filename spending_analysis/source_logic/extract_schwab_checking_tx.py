@@ -27,9 +27,15 @@ Process:
 FOLLOWUP: we can ignore the brokerage file, all the transactions should cancel out
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
+
+
+#pylint: disable=wrong-import-position
 import datetime
 import source_logic.spending_utils as utils
-
+#pylint: enable=wrong-import-position
 
 def main():
     utils.run_extraction_loop(convert_to_tx_format)
