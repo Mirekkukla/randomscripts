@@ -12,7 +12,12 @@ Usage:
 - tun this script
 """
 import os
-import spending_utils as utils
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
+
+#pylint: disable=wrong-import-position
+from source_logic import spending_utils as utils
+#pylint: enable=wrong-import-position
 
 new_folder = utils.get_single_source_folder_path(utils.OperatingMode.CHASE_CREDIT)
 uncategorized_lines = utils.load_from_file(os.path.join(new_folder, "uncategorized_lines.tsv"))

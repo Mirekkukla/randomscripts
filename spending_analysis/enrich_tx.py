@@ -20,7 +20,7 @@ for that country. Must be in chronological order
 
 import os
 import datetime
-from source_logic import spending_utils as utils
+from spending_analysis.source_logic import spending_utils as utils
 
 basic_tx_path = os.path.join(utils.get_aggregate_folder_path(), "all_tx.tsv")
 enriched_tx_path = os.path.join(utils.get_aggregate_folder_path(), "enriched_tx.tsv")

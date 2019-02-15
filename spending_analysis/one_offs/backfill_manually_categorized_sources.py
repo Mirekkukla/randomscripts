@@ -14,16 +14,19 @@ assign both versions the same source ("mirek")
 
 Modify the resulting categorized file to have the above sources read "soph"
 """
-
 import os
-import spending_utils as utils
-import load_manually_categorized_tx
-from load_manually_categorized_tx import MANUALLY_CATEGORIZED_TX_FILENAME
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
 
-import extract_old_chase_credit_tx
-import extract_chase_checking_tx
-import extract_schwab_checking_tx
-import extract_schwab_brokerage_tx
+#pylint: disable=wrong-import-position
+from source_logic import spending_utils as utils
+from source_logic import load_manually_categorized_tx
+from source_logic import extract_old_chase_credit_tx
+from source_logic import extract_chase_checking_tx
+from source_logic import extract_schwab_checking_tx
+from source_logic import extract_schwab_brokerage_tx
+from source_logic.load_manually_categorized_tx import MANUALLY_CATEGORIZED_TX_FILENAME
+#pylint: enable=wrong-import-position
 
 if utils.OP_MODE == utils.OperatingMode.CHASE_CREDIT:
     raise Exception("Don't need to backfill chase credit, the old -> new conversion script took care of that")
