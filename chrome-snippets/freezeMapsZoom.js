@@ -7,7 +7,6 @@
 // will re-initialize the window object (and with it our
 // mutation observer / chrome console environment)
 
-
 (function() {
   'use strict';
 
@@ -24,13 +23,13 @@
       return;
     }
     return url.match(zoomRE)[0];
-  }
+  };
 
   let replaceZoomLevel = function(url, desiredZoomLevel) {
     // replace the zoom level in url with the given disired zoom level
     let existingZoomLevel = extractZoomLevel(url);
     return url.replace(existingZoomLevel, desiredZoomLevel);
-  }
+  };
 
   let desiredZoomLevel = extractZoomLevel(document.location.href);
   console.log("Fixing desired zoom level at " + desiredZoomLevel);
@@ -48,7 +47,7 @@
               // we need to truncate all the old "data" information
               // otherwise google maps will ignore the zoom level we
               // specified and redirect to a zoom level it deems better
-              let fixedNewUrl = newUrl.split("/data")[0]
+              let fixedNewUrl = newUrl.split("/data")[0];
 
               console.dir(`Changing URL from ${currentUrl} to ${fixedNewUrl}`);
               location.assign(fixedNewUrl);
@@ -56,6 +55,7 @@
       }); 
   });
 
+  // attach to the window object so that we can later disconnect it
   window.mutationObserver.observe(document.documentElement, {
     attributes: true,
     characterData: true,
