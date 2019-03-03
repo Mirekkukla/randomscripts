@@ -12,4 +12,3 @@
 
   prompt("Copy the following (don't forget to BCC!):", emails); 
 })();
-
