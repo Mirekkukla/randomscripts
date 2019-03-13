@@ -95,7 +95,7 @@ def export_all_uncategorized():
         [uncategorized_lines, uncategorized_lines_filepath] = export_uncategorized_tx.main()
         if uncategorized_lines:
             print "Uncategorized lines for {}, see file at\n{}".format(utils.OP_MODE, uncategorized_lines_filepath)
-            exit(0)
+            raise Exception("Uncategorized lines, see above")
 
     run_for_all_op_modes(export_uncategorized_fn)
 
