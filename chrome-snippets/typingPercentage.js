@@ -7,17 +7,11 @@
     let totalCorrect = 0;
     let total = 0;
 
-    for (let listItem of $(".graph").children) {
-        for (let cellDiv of listItem.children) {
-            if (cellDiv.className != "result") {
-                continue;
-            }
-            let fractionStr = cellDiv.innerText;
-            let fractionArr = fractionStr.split("/");
-
-            totalCorrect += parseInt(fractionArr[0]);
-            total += parseInt(fractionArr[1]);
-        }
+    for (let cellDiv of $$(".graph .result")) {
+        let fractionStr = cellDiv.innerText;
+        let fractionArr = fractionStr.split("/");
+        totalCorrect += parseInt(fractionArr[0]);
+        total += parseInt(fractionArr[1]);
     }
 
     let percent = totalCorrect * 100.0 / total;
