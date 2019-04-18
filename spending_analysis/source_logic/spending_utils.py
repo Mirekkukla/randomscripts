@@ -27,7 +27,8 @@ BASE_FOLDER = os.path.join(os.path.expanduser("~"), "spending_analysis")
 # terms with substrings of read words are meant to capture variations on a word
 # GOTCHA: make sure to escape special chars, as these will be part of a regex
 chase_credit_terms = {
-    'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE"],
+    'CNC': ["TRAVEL CREDIT", "AUTOMATIC PAYMENT", "ANNUAL MEMBERSHIP FEE",
+            "Payment Thank You"],
 
     # flight, train, uber, other transport
     'F': ["airline", "FRONTIER", " air ", "air\t", "UNITED 0", "UNITED      0", "PEGASUS", "NORWEGIAN", r"KIWI\.COM", "RYANAIR"],
@@ -41,14 +42,15 @@ chase_credit_terms = {
     'A': ["VIATOR"], # visas go in here too
 
     # coffee, restaurant, booze, store
-    'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN", "COFFE"],
+    'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN",
+          "COFFE", "PULP-PAPA"],
     'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ", "pub\t",
           "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
-          "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE", "house",
+          "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE",
           "PHO", "pizz", "REST", "TAVERN"],
     'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT", "BAR ", "hops",
           "BOTTLE", " PIV", "\tPIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
-          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL", "FRESHBAR", "bar\t", "FONTEINEN"],
+          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL", "FRESHBAR", "bar\t", "FONTEINEN", "QUICKIE PICKIE"],
     'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS",
           "FOOD", "RITE", "MERCADO"],
 
@@ -57,7 +59,7 @@ chase_credit_terms = {
     # body (clothes-hair-spa),
     'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
     # subscription (vpn-spotify-website-phone)
-    'SUB': ["AVNGATE", "Spotify", "GHOST", "PROJECT FI", "Google Fi"],
+    'SUB': ["AVNGATE", "Spotify", "GHOST", "PROJECT FI", "Google Fi", "HMA PRO VPN"],
 
     # misc
     'ONE': ["Google Storage", r"GOOGLE \*Domains"], # one-offs (laptop, phone)
@@ -69,7 +71,8 @@ chase_credit_terms = {
 
 chase_checking_terms = {
     'CNC': ["CHASE CREDIT CRD AUTOPAY", "SCHWAB", "DEPOSIT", "TRANSFER", "TAX", "C PAYROLL",
-            "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY"],
+            "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY",
+            "Payment to Chase card", "FID BKG SVC LLC  MONEYLINE"],
     'ATM': ["ATM", "CHECK_PAID"],
     'ONE': ["WIRE FEE", "Pacific Gas"],
     'FEE': ["ATM FEE", "ADJUSTMENT FEE", "SERVICE FEE", "COUNTER CHECK"],
