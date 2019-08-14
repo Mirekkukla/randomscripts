@@ -1,4 +1,4 @@
-# import json
+import json
 import requests
 
 VALIDATION_URL = 'https://uatuser.rynly.com/api/hub/validateAddress'
@@ -9,10 +9,16 @@ ERRORS = []
 def main():
 
     address_lines = get_addresses()
+    validated_addresses = []
     num_validated = 0
     for i, address_line in enumerate(address_lines):
         print "{}) Validating line {}".format(i, address_line)
-        if validate_addressline(address_line):
+        validated_address = get_validated_address(address_line)
+        print validated_address
+
+        validated_addresses.append(validated_address)
+
+        if validated_address:
             num_validated += 1
         else:
             print ""
@@ -29,7 +35,7 @@ def main():
         print error
 
 
-def validate_addressline(address_line):
+def get_validated_address(address_line):
     [company, name, address, city, state, zipcode] = address_line
 
     orig_address = {
@@ -65,6 +71,10 @@ def validate_addressline(address_line):
     raw_response = requests.post(VALIDATION_URL, json=orig_address, headers=headers, cookies=cookies)
     response = raw_response.json()
 
+    # print "\nFull response:"
+    # print json.dumps(raw_response.json(), indent=2)
+    # exit(0)
+
     if response["hasError"]:
         print "Errors"
         print response["errors"]
@@ -72,7 +82,7 @@ def validate_addressline(address_line):
         NUM_ERRORS += 1
         global ERRORS
         ERRORS.append(address_line)
-        return False
+        return None
         # print "\nFull response:"
         # print json.dumps(raw_response.json(), indent=2)
         # exit(1)
@@ -83,7 +93,7 @@ def validate_addressline(address_line):
     recommended_addr = data["recommendedAddress"]
 
     if not recommended_addr:
-        return True
+        return validated_addr
 
     else:
         print "Mismatches"
@@ -110,7 +120,7 @@ def validate_addressline(address_line):
                 print "\tvalidated addres={}".format(validated_addr[key])
                 print "\trecommended addres={}".format(recommended_addr[key])
 
-    return False
+    return None
 
 
 def get_addresses():
@@ -118,12 +128,11 @@ def get_addresses():
     with open(filename) as f:
         lines = []
         for line in f.read().splitlines():
+            if not line.split("\t")[0]: # do less jank
+                continue
             lines.append(line.split("\t"))
         return lines
 
 
 if __name__ == '__main__':
     main()
-
-# print "\nFull response:"
-# print json.dumps(raw_response.json(), indent=2)
