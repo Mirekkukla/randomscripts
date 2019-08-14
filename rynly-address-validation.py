@@ -1,19 +1,32 @@
-import json
+# import json
 import requests
 
 VALIDATION_URL = 'https://uatuser.rynly.com/api/hub/validateAddress'
 DEFAULT_PHONE_NUM = '971-708-6202'
+NUM_ERRORS = 0
+ERRORS = []
 
 def main():
 
     address_lines = get_addresses()
     num_validated = 0
-    for address_line in address_lines:
-        print "validating line {}".format(address_line)
+    for i, address_line in enumerate(address_lines):
+        print "{}) Validating line {}".format(i, address_line)
         if validate_addressline(address_line):
             num_validated += 1
+        else:
+            print ""
 
-    print "Validated {} / {}".format(num_validated, len(address_lines))
+    num_lines = len(address_lines)
+    print "Checked {} addresses".format(num_lines)
+    print "{} errors".format(NUM_ERRORS)
+    print "{} suggestions".format(num_lines - num_validated - NUM_ERRORS)
+    print "{} validated".format(num_validated)
+
+    print "ERRORS:"
+    global ERRORS
+    for error in ERRORS:
+        print error
 
 
 def validate_addressline(address_line):
@@ -55,9 +68,14 @@ def validate_addressline(address_line):
     if response["hasError"]:
         print "Errors"
         print response["errors"]
-        print "\nFull response:"
-        print json.dumps(raw_response.json(), indent=2)
-        exit(1)
+        global NUM_ERRORS
+        NUM_ERRORS += 1
+        global ERRORS
+        ERRORS.append(address_line)
+        return False
+        # print "\nFull response:"
+        # print json.dumps(raw_response.json(), indent=2)
+        # exit(1)
 
     data = raw_response.json()["data"]
 
@@ -68,18 +86,16 @@ def validate_addressline(address_line):
         return True
 
     else:
-        print "Different address recommended"
+        print "Mismatches"
 
-        print "\nOriginal address:"
-        print json.dumps(orig_address, indent=2)
+        # print "\nOriginal address:"
+        # print json.dumps(orig_address, indent=2)
 
-        print "\nValidated address:"
-        print json.dumps(validated_addr, indent=2)
+        # print "\nValidated address:"
+        # print json.dumps(validated_addr, indent=2)
 
-        print "\nRecommended address"
-        print json.dumps(recommended_addr, indent=2)
-
-        print "\nMismatches:"
+        # print "\nRecommended address"
+        # print json.dumps(recommended_addr, indent=2)
         for key, val in recommended_addr.iteritems():
             # these don't show up in the recommended address response
             if key in ["phone", "company"]:
@@ -89,10 +105,10 @@ def validate_addressline(address_line):
                 print "Key '" + key + "'' missing in original address"
 
             if recommended_addr[key] != validated_addr[key]:
-                print "\nValue mismatch on key '{}'".format(key)
-                print "(original address={})".format(validated_addr[key])
-                print "validated addres={}".format(validated_addr[key])
-                print "recommended addres={}".format(recommended_addr[key])
+                print "Value mismatch on key '{}'".format(key)
+                # print "(original address={})".format(validated_addr[key])
+                print "\tvalidated addres={}".format(validated_addr[key])
+                print "\trecommended addres={}".format(recommended_addr[key])
 
     return False
 
