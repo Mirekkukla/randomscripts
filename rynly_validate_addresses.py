@@ -1,7 +1,7 @@
 import json
 import requests
 
-VALIDATION_URL = 'https://uatuser.rynly.com/api/hub/validateAddress'
+VALIDATION_URL = 'https://user.rynly.com/api/hub/validateAddress'
 DEFAULT_PHONE_NUM = '971-708-6202'
 NUM_ERRORS = 0
 ERRORS = []
@@ -14,8 +14,6 @@ def main():
     for i, address_line in enumerate(address_lines):
         print "{}) Validating line {}".format(i, address_line)
         validated_address = get_validated_address(address_line)
-        print validated_address
-
         validated_addresses.append(validated_address)
 
         if validated_address:
@@ -54,19 +52,24 @@ def get_validated_address(address_line):
         "Accept-Language": "en-US,en;q=0.9,cs;q=0.8",
         "Connection": "keep-alive",
         "Content-Type": "application/json;charset=UTF-8",
-        "Origin": "https://uatuser.rynly.com",
-        "Referer": "https://uatuser.rynly.com/user/Home/PackageCreate",
+        "Origin": "https://user.rynly.com",
+        "Referer": "https://user.rynly.com/user/Home/PackageCreate",
+        "Request-Context": "appId=cid-v1:b40138d5-f75d-4576-ba63-17f31d035d7e",
+        "Request-Id": "|w3Jyg.Y3Qsn",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-origin",
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
-        }
+    }
 
     cookies = {
-        "RynlyAccessToken": "%2BRjECzm8Xk9Y%2BboADaS4FZu2%2FBjR0aBZ9cT8cXRzW59Va5xOgJpXoI1G%2F8DxuRGg",
-        "__stripe_mid": "0551dbea-62af-4c95-acd3-a5bb1c097ad6",
-        "__stripe_sid": "7b3dab1e-05f2-47ce-981f-ac56e5765989",
-        "_ga": "GA1.2.257506453.1559084098"
-        }
+        ".AspNetCore.Antiforgery.w5W7x28NAIs": "CfDJ8AYKSQAAm3pGtzOiVKhozmD_2DNR--tZmUH0ZGyOqQNSQLMowH7KMKdYXLJbKPPo1fW25_9MZdDiTDYx6co8qiofeGgISsEC3CYy5sQbJurWWJOTZ4ajpKXk4Q1BzRsdN2jk8vhESdWWeKPTqajtp68",
+        "RynlyAccessToken": "L%2FzqcGuHqGRwdpE2m5CWUs4kjtbwwxEpaaV7X9l01viLfBtA%2BUA3dqN7Xqa8Wgio",
+        "__stripe_mid": "c433aa6e-cb01-4d8f-90ee-f1206ba70d82",
+        "__stripe_sid": "1d43d20f-7ab5-4de3-94cc-592f38c07ae7",
+        "_ga": "GA1.2.257506453.1559084098",
+        "ai_session": "lfNag|1565825036519|1565825047720.86",
+        "ai_user": "z8atJ|2019-07-18T20:05:12.315Z"
+    }
 
     raw_response = requests.post(VALIDATION_URL, json=orig_address, headers=headers, cookies=cookies)
     response = raw_response.json()
