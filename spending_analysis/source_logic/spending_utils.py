@@ -3,10 +3,10 @@ import os
 import re
 
 class OperatingMode(object): #pylint: disable=too-few-public-methods
-    CHASE_CREDIT = 1
-    CHASE_CHECKING = 2
-    SCHWAB_CHECKING = 3
-    SCHWAB_BROKERAGE = 4
+    CHASE_CREDIT = "CHASE_CREDIT"
+    CHASE_CHECKING = "CHASE_CHECKING"
+    SCHWAB_CHECKING = "SCHWAB_CHECKING"
+    SCHWAB_BROKERAGE = "SCHWAB_BROKERAGE"
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
 # WARNING: this is a global var and gets changed by the final aggregate export script
@@ -34,51 +34,79 @@ chase_credit_terms = {
     'TR': [r"WWW\.CD\.CZ", "AMTRAK", r"LE\.CZ", "CALTRAIN"],
     'UB': ["uber", "LYFT"],
     'OT': ["limebike", "BIRD", "PARKING KITTY", "MTA", "CITY OF PORTLAND DEPT", "76 -", "fuel", "HUB",
-           "CHEVRON", "SHELL", "JUMPBIKESHARESAMOLACA"],
+           "CHEVRON", "SHELL", "JUMPBIKESHARESAMOLACA", "SMARTPARK", "BIKETOWN", "RAZOR SCOOTER",
+           "SPACE AGE"],
 
     # housing, activities
-    'H': ["AIRBNB", "hotel"],
+    'H': ["AIRBNB", "hotel", "MOTEL"],
     'A': ["VIATOR"], # visas go in here too
 
     # coffee, restaurant, booze, store
     'C': ["coffee", "costa", "starbucks", "philz", "java", "LOFT CAFE", "Tiny's", "KAFE", "KAVA", "STUMPTOWN",
-          "COFFE", "PULP-PAPA"],
+          "COFFE", "PULP-PAPA", "ROASTERS", "FIGLIA", "DUTCH BROS"],
     'R': ["restaur", "sushi", "BILA VRANA", "pizza", "grill", "AGAVE", "thai", "ramen", "bagel", "pub ", "pub\t",
           "taco", "VERTSHUSET", "MIKROFARMA", "LTORGET", "POULE", "CHIPOTLE", "BIBIMBAP", "Khao", "EAST PEAK",
           "ZENBU", "EUREKA", "KERESKEDO", "CRAFT", "BURGER", "BAO", "ESPRESSO", "CAFE",
-          "PHO", "pizz", "REST", "TAVERN"],
+          "PHO", "pizz", " REST", "TAVERN", "TAQUERIA", "ANKENY", "BLUE GOOSE", "MODERN TIMES", "CANTEEN",
+          "CRACK LLC", "LARDO", "YATAIMURA", "WHOLEFDS", "POSTMATES", "MOBERI", "WHOLE BOWL", "NORANEKO",
+          "KITCHEN", "JUICING", "BISTRO", "DRAGON", "XINH", "VIRTUOUS", "POKE", "CHICKEN"],
+
     'B': ["brew", "liquor", "beer", "PUBLIC HO", "TAPROOM", "wine", "VINOTEKA", "PONT", "BAR ", "hops",
           "BOTTLE", " PIV", "\tPIV", "POPOLARE", "NELSON", "GROWLERS", "HOP SHOP", "BARREL", "BLACK CAT", "VENUTI",
-          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL", "FRESHBAR", "bar\t", "FONTEINEN", "QUICKIE PICKIE"],
+          "BODPOD", "VINEYARD", "MIKKELLER", "CANNIBAL", "FRESHBAR", "bar\t", "FONTEINEN", "QUICKIE PICKIE",
+          "BELMONT", "LOYAL LEGION", "EASTBURN", "HEREAFTER", "BEULAHLAND", "CIDER"],
+
     'S': ["Billa", "ALBERT", "market", "SAFEWAY", "CVS", "7-ELEVEN", "GROCERY", "Strood", "DROGERIE", "WHOLEFDS",
-          "FOOD", "RITE", "MERCADO"],
+          "FOOD", "RITE", "MERCADO", "MASOJIKO FRANCOUZSK", "PLAID PANTRY", "FRED MEYER", "QUICK STORE"],
 
     # entertainment (gifts-books-games)
-    'E': ["AMAZON", "POWELL", "NINTENDO", r"GOPAY\.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES"],
+    'E': ["AMAZON", "POWELL", "NINTENDO", r"GOPAY\.CZ", "FREEDOM INTERNET", "AMZN", "FLORA", "BARNES", "THEATER",
+          "POWELL'S"],
+
     # body (clothes-hair-spa),
-    'BDY': ["NORDSTROM", "spa", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB"],
+    'BDY': ["NORDSTROM", r"\sspa\s", "ALEXANDRA D GRECO", "FIT FOR LIFE", "MANYOCLUB", "RODANFI"],
+
     # subscription (vpn-spotify-website-phone)
     'SUB': ["AVNGATE", "Spotify", "GHOST", "PROJECT FI", "Google Fi", "HMA PRO VPN"],
 
     # misc
     'ONE': ["Google Storage", r"GOOGLE \*Domains"], # one-offs (laptop, phone)
     'EDU': [r"CZLT\.CZ"], # language-course / EFT course / license renewal
-    'HLT': ["World Nomads"], # insurance, doctors, etc
-    'HMM': [], # sketchy shit
-    'I': [] # unknown small charge, ignore
+    'HLT': ["World Nomads", "AGILE INS", "DENTAL", "PROVIDENCE", "INSURANCE", "MYBENEFITSKEEPER"], # insurance, doctors, etc
+    'HMM': ["NETFLIX"], # sketchy shit
+    'I': [], # unknown small charge, ignore
+
+    # wedding
+    'W': ["Etsy", "COSTCO COM"],
+
+    # bills
+    'BILL': ["COMCAST", "PORTLAND GNL ELEC"],
+
+    # Moving (furniture, etc)
+    'M': ["WAL-MART"],
+
+    # Interest charges
+    'FEE': ["INTEREST CHARGE", "PURCH INTEREST"]
 }
 
 chase_checking_terms = {
     'CNC': ["CHASE CREDIT CRD AUTOPAY", "SCHWAB", "DEPOSIT", "TRANSFER", "TAX", "C PAYROLL",
             "payment from MIROSLAV", "payment to Sophia", "payment from VERONIKA KUKLA", "POPMONEY",
-            "Payment to Chase card", "FID BKG SVC LLC  MONEYLINE"],
+            "Payment to Chase card", "FID BKG SVC LLC  MONEYLINE",
+            "PAYROLL", "payment to Sophia", "payment from SOPHIA", "payment to Miroslav"],
     'ATM': ["ATM", "CHECK_PAID"],
     'ONE': ["WIRE FEE", "Pacific Gas"],
     'FEE': ["ATM FEE", "ADJUSTMENT FEE", "SERVICE FEE", "COUNTER CHECK"],
     'SQR': ["SQC*", "VENMO", "payment from SUZANNE", "payment to Mom", "payment to Suzy"],
-    'F': ["NORWEGIAN", "EXPEDIA"],
+    'F': ["NORWEGIAN", "EXPEDIA", "payment from FRANK"],
     'HMM': ["PIZTUZTIYA"],
     'TR': ["RAIL"],
+
+    'C': ["ROASTER"],
+    'R': ["sushi"],
+
+    'RNT': ["1299.28"],
+    'W': ["125.00"]
 
 }
 
@@ -91,7 +119,7 @@ schwab_checking_terms = {
 
 schwab_brokerage_terms = {
     'CNC': ["TRANSFER", "VANGUARD"],
-    'I': ["Interest"]
+    'FEE': ["Interest"]
 }
 
 
@@ -262,9 +290,11 @@ def check_tsv_tx_format(lines, with_category=False):
     """
     leading_date_exp = r'^[0-9]{2}/[0-9]{2}/[0-9]{4}' # "DD/MM/YYYY"
     number_exp = r'[-]{0,1}[0-9,]*\.[0-9]{2}' # "-1,234.56"
-    end_of_line_exp = r'\t[A-Z]{1,3}$' if with_category else r'$' # "EDU"
+    end_of_line_exp = r'\t[A-Z]{1,4}$' if with_category else r'$' # "EDU"
     tsv_tx_expr = leading_date_exp + r'\t.*\t' + number_exp + r'\t.*' + end_of_line_exp
     for line in lines:
+        if line.split('\t') == ['', '', '', '', '']:
+            continue
         if not re.match(tsv_tx_expr, line):
             print "Split on tab: {}".format(line.split('\t'))
             raise Exception("Line not in tsv tx format, check number decimal points: [{}]".format(line))

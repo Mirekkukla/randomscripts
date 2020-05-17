@@ -37,6 +37,8 @@ enriched_tx_path = os.path.join(utils.get_aggregate_folder_path(), "enriched_tx.
 date_overrides_path = os.path.join(utils.get_aggregate_folder_path(), "date_overrides.tsv")
 countries_path = os.path.join(utils.get_aggregate_folder_path(), "countries.tsv")
 
+# This should be all op_modes, unless you're iterating on a specific one
+OP_MODES_TO_RUN = [OPMode.CHASE_CREDIT, OPMode.CHASE_CHECKING, OPMode.SCHWAB_CHECKING]
 
 def main():
 
@@ -62,7 +64,7 @@ def main():
             fixed_date_str = date_override_by_tx[tx]
             print "Overriding {} with date {}".format(tx, fixed_date_str)
 
-        country = get_country(country_lines, fixed_date_str)
+        country = "N/A" if not country_lines else get_country(country_lines, fixed_date_str)
 
         dateless_tx = tx.split("\t", 1)[1]
         enriched_tx = "{}\t{}\t{}".format(fixed_date_str, country, dateless_tx)
@@ -83,6 +85,7 @@ def extract_all_txs():
         }
         export_fn_by_mode[utils.OP_MODE]()
 
+    print "\n========= EXTRACTING ALL TRANSACTIONS PER MODE =========\n"
     run_for_all_op_modes(exporter_fn)
 
 
@@ -97,6 +100,7 @@ def export_all_uncategorized():
             print "Uncategorized lines for {}, see file at\n{}".format(utils.OP_MODE, uncategorized_lines_filepath)
             raise Exception("Uncategorized lines, see above")
 
+    print "\n========= EXPORT ALL UNCATEGORIZED TRANSACTIONS PER MODE =========\n"
     run_for_all_op_modes(export_uncategorized_fn)
 
 
@@ -116,7 +120,7 @@ def aggregate_exported_txs():
 
 def run_for_all_op_modes(fn):
     old_op_mode = utils.OP_MODE
-    for op_mode in [OPMode.CHASE_CREDIT, OPMode.CHASE_CHECKING, OPMode.SCHWAB_CHECKING]:
+    for op_mode in OP_MODES_TO_RUN:
         # HACK: global vars are evil
         print "HACK: former OP_MODE value was {}, changing to {}".format(utils.OP_MODE, op_mode)
         utils.OP_MODE = op_mode
@@ -158,7 +162,8 @@ def sanity_check_countries(country_lines):
     """ Make sure date override lines look reasonable """
 
     if not country_lines:
-        raise Exception("No country lines found")
+        print "No country lines found"
+        return
 
     prior_date = None
     unique_countries = set()
@@ -185,7 +190,8 @@ def sanity_check_date_overrides(basic_txs, date_overrides):
     """ Make sure date override lines look reasonable / corresponds to real txs"""
 
     if not date_overrides:
-        raise Exception("No date overrides found")
+        print "No date overrides found"
+        return
 
     date_overrides_keys = [l.rsplit("\t", 1)[0] for l in date_overrides]
     num_unique_keys = len(set(date_overrides_keys))
@@ -222,26 +228,26 @@ def sanity_check_date_overrides(basic_txs, date_overrides):
                             .format(override_date, original_date, line))
 
     # make sure all flights, hotels, and large venmoish txs have a date overrides entry
-    date_overrides_set = set(date_overrides_keys)
-    missing_overrides_entries = []
-    for line in basic_txs:
-        category = line.split("\t")[-1]
-        amt = float(line.split("\t")[2].replace(",", ""))
-        is_large_sqr = category == "SQR" and amt > 100
-        if category != "F" and category != "H" and not is_large_sqr:
-            continue
+    # date_overrides_set = set(date_overrides_keys)
+    # missing_overrides_entries = []
+    # for line in basic_txs:
+    #     category = line.split("\t")[-1]
+    #     amt = float(line.split("\t")[2].replace(",", ""))
+    #     is_large_sqr = category == "SQR" and amt > 100
+    #     if category != "F" and category != "H" and not is_large_sqr:
+    #         continue
 
-        if line not in date_overrides_set:
-            missing_overrides_entries.append(line)
+    #     if line not in date_overrides_set:
+    #         missing_overrides_entries.append(line)
 
-    missing_entries_path = os.path.join(utils.get_aggregate_folder_path(), "missing_date_entries.tsv")
-    if missing_overrides_entries:
-        utils.write_to_file(missing_overrides_entries, missing_entries_path)
-        raise Exception("Some flight / hotel / large SQR tx doesn't have an date override entry, see above")
+    # missing_entries_path = os.path.join(utils.get_aggregate_folder_path(), "missing_date_entries.tsv")
+    # if missing_overrides_entries:
+    #     utils.write_to_file(missing_overrides_entries, missing_entries_path)
+    #     raise Exception("Some flight / hotel / large SQR tx doesn't have an date override entry, see above")
 
-    if os.path.exists(missing_entries_path):
-        print "Nuking existing 'missing override entries' file at {}".format(missing_entries_path)
-        os.remove(missing_entries_path)
+    # if os.path.exists(missing_entries_path):
+    #     print "Nuking existing 'missing override entries' file at {}".format(missing_entries_path)
+    #     os.remove(missing_entries_path)
 
     print "Passed date overrides sanity check"
 

@@ -35,6 +35,7 @@ import source_logic.load_manually_categorized_tx as load_manually_categorized_tx
 # (We'll print out all lines (that aren't manually categorized) that match it)
 # GOTCHA: this is used in a regex, so carefeul with special chars like "*"
 GREP_QUERY = ""
+ONLY_GREP_UNMATCHED = True
 
 UNCATEGORIZED_LINES_FILENAME = "uncategorized_lines.tsv"
 
@@ -46,7 +47,7 @@ def main():
     lines = utils.load_all_tx_lines()
     categorizations = load_manually_categorized_tx.safely_get_manual_categorizations(lines)
 
-    print "Categorizing all lines\n"
+    print "Categorizing all lines for {}\n".format(utils.OP_MODE)
     for line in lines:
 
         # skip manual categorizations
@@ -54,20 +55,27 @@ def main():
             categorized_count += 1
             continue
 
-        # try auto-assign a category using term matching
-        # (unless we're "grepping" to find matches / detect false positives)
-        if not GREP_QUERY and get_matching_category(line):
-            match_count += 1
-            continue
+        # don't search the filename (e.g. `mirek_schwab_checking_raw.csv`),
+        # we'll get false positives (e.g. for term "check")
+        line_without_filename = "\t".join(line.split("\t")[0:-1])
+
+        # if not grepping, try auto-assign a category using term matching
+        # if grepping, we may or may not want to auto-assign a category
+        # (if searching for false positives, for instance, we _don't_ want to categorize)
+        if not GREP_QUERY or ONLY_GREP_UNMATCHED:
+            if get_matching_category(line_without_filename):
+                match_count += 1
+                continue
 
         uncategorized_lines.append(line)
 
-        if GREP_QUERY and substring_match(line, [GREP_QUERY]):
+        if GREP_QUERY and substring_match(line_without_filename, [GREP_QUERY]):
             print line
 
     # if not searching for a specific term, print distribution of remaining lines
     if not GREP_QUERY and uncategorized_lines:
         all_terms = reduce(lambda l1, l2: l1 + l2, utils.get_terms().values(), [])
+        print "UNCATEGORIZED LINES:\n"
         print_distribution(get_desc_distribution(uncategorized_lines, all_terms), "Desciption distribution")
         print_distribution(get_word_distribution(uncategorized_lines, all_terms), "Word distribution")
 
@@ -75,11 +83,11 @@ def main():
     print "Total categorized: {}".format(categorized_count + match_count)
     print "- Manually categorized: {}".format(categorized_count)
     print "- Matched a term: {}".format(match_count)
-    print "Remaining: {}".format(len(uncategorized_lines))
+    print "Remaining: {}\n".format(len(uncategorized_lines))
 
     if GREP_QUERY:
         print "Grep query is '{}', not touching the uncategorized tx file".format(GREP_QUERY)
-        exit(0)
+        return [[], ""]
 
     # export remaining lines into TSV which will get copy-pasted to google sheets and manually populated
     uncategorized_lines_filepath = os.path.join(utils.get_single_source_folder_path(), UNCATEGORIZED_LINES_FILENAME)
