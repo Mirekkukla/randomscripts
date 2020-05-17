@@ -3,23 +3,22 @@ import os
 import re
 
 class OperatingMode(object): #pylint: disable=too-few-public-methods
-    OLD_CHASE_CREDIT = 1
-    CHASE_CREDIT = 2
-    CHASE_CHECKING = 3
-    SCHWAB_CHECKING = 4
-    SCHWAB_BROKERAGE = 5
+    CHASE_CREDIT = 1
+    CHASE_CHECKING = 2
+    SCHWAB_CHECKING = 3
+    SCHWAB_BROKERAGE = 4
 
 # MODIFY THIS DEPENDING ON WHAT DATA WE'RE PROCESSING
 # WARNING: this is a global var and gets changed by the final aggregate export script
 # GOTCHA: don't find this global as a default arg, otherwise it's initial value will get "fixed"!
 OP_MODE = OperatingMode.CHASE_CREDIT
 
-FIRST_TX_DATE = datetime.datetime(2018, 2, 16) # first day of joblessness
+FIRST_TX_DATE = datetime.datetime(2019, 5, 1)
 
 # NOTE: we're effectively not using the last tx date anymore
 LAST_TX_DATE = datetime.datetime(9999, 12, 31) # last date we have data across all sources
 
-BASE_FOLDER = os.path.join(os.path.expanduser("~"), "spending_analysis")
+BASE_FOLDER = os.path.join(os.path.expanduser("~"), "spending_analysis_05_2020")
 
 # TODO: randomize and check for multiple matches
 
@@ -102,7 +101,6 @@ def get_terms(mode=None):
     if not mode:
         mode = OP_MODE
     terms_by_mode = {
-        OperatingMode.OLD_CHASE_CREDIT: chase_credit_terms, # the "statement" input format
         OperatingMode.CHASE_CREDIT: chase_credit_terms,
         OperatingMode.CHASE_CHECKING: chase_checking_terms,
         OperatingMode.SCHWAB_CHECKING: schwab_checking_terms,
@@ -125,7 +123,6 @@ def get_single_source_folder_path(mode=None):
     if not mode:
         mode = OP_MODE
     folder_by_mode = {
-        OperatingMode.OLD_CHASE_CREDIT: "old_chase_extract_credit_data",
         OperatingMode.CHASE_CREDIT: "chase_extract_credit_data",
         OperatingMode.CHASE_CHECKING: "chase_extract_checking_data",
         OperatingMode.SCHWAB_CHECKING: "schwab_extract_checking_data",
@@ -144,11 +141,10 @@ def get_raw_filenames(mode=None):
     if not mode:
         mode = OP_MODE
     files_by_mode = {
-        OperatingMode.OLD_CHASE_CREDIT: ["mirek_2018_raw.txt", "soph_2018_raw.txt"],
-        OperatingMode.CHASE_CREDIT: ["mirek_2018_raw.csv", "soph_2018_raw.csv"],
-        OperatingMode.CHASE_CHECKING: ["mirek_2018_checking_raw.csv", "soph_2018_checking_raw.csv"],
-        OperatingMode.SCHWAB_CHECKING: ["mirek_2018_schwab_checking_raw.csv"],
-        OperatingMode.SCHWAB_BROKERAGE: ["mirek_2018_schwab_brokerage_raw.csv"],
+        OperatingMode.CHASE_CREDIT: ["mirek_raw.csv", "soph_raw.csv"],
+        OperatingMode.CHASE_CHECKING: ["mirek_checking_raw.csv", "soph_checking_raw.csv"],
+        OperatingMode.SCHWAB_CHECKING: ["mirek_schwab_checking_raw.csv"],
+        OperatingMode.SCHWAB_BROKERAGE: ["mirek_schwab_brokerage_raw.csv"],
     }
     return files_by_mode[mode]
 
@@ -156,11 +152,11 @@ def get_raw_filenames(mode=None):
 def get_extracted_tx_filepath(raw_filename, mode=None):
     if not mode:
         mode = OP_MODE
-    raw_suffix = "raw.txt" if mode == OperatingMode.OLD_CHASE_CREDIT else "raw.csv"
-    if raw_suffix not in raw_filename:
+
+    if "raw.csv" not in raw_filename:
         raise Exception("Bad raw filename: '{}'".format(raw_filename))
 
-    tx_filename = raw_filename.replace(raw_suffix, "tx.tsv")
+    tx_filename = raw_filename.replace("raw.csv", "tx.tsv")
     return os.path.join(get_extracted_tx_folder_path(), tx_filename)
 
 

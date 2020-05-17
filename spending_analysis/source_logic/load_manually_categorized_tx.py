@@ -31,8 +31,6 @@ def load_categorized_tx(filepath):
     raw_lines = utils.load_from_file(filepath)
     utils.check_tsv_tx_format(raw_lines, with_category=True)
     lines = raw_lines
-    if utils.OP_MODE == utils.OperatingMode.OLD_CHASE_CREDIT:
-        lines = fix_gdocs_number_formatting(raw_lines)
 
     categorizations = {}
     for line in lines:
@@ -64,41 +62,5 @@ def check_categorizations_coverage(categorizations, lines):
             raise Exception("Bogus categorized line: '{}'".format([categorized_line]))
 
 
-def fix_gdocs_number_formatting(manually_categorized_lines):
-    """
-    Google docs prefixes a zero to amts < 1 dollar, whereas the old chase format doesn't
-    This method removed the learing zeros
-    """
-    if utils.OP_MODE != utils.OperatingMode.OLD_CHASE_CREDIT:
-        raise Exception("Leaving zeroes should only be remove for OLD_CHASE_CREDIT mode")
-
-    fixed_lines = []
-    for line in manually_categorized_lines:
-        [date_str, desc, amt_str, source, category] = line.split('\t')
-        if amt_str[0] != "0":
-            fixed_lines.append(line)
-            continue
-
-        fixed_amt_str = amt_str[1:]
-        fixed_line = '\t'.join([date_str, desc, fixed_amt_str, source, category])
-        fixed_lines.append(fixed_line)
-
-    return fixed_lines
-
-
-def tests():
-    print "Running google formatting test"
-    # test gdocs format fixing
-    good_line = "02/21/2018\tI'M GOOD\t.88\tyo.txt\tCNC"
-    bad_line = "02/21/2018\tNEED FIXING\t0.99\tyo.txt\tCNC"
-    expected = ["02/21/2018\tI'M GOOD\t.88\tyo.txt\tCNC", "02/21/2018\tNEED FIXING\t.99\tyo.txt\tCNC"]
-    converted = fix_gdocs_number_formatting([good_line, bad_line])
-    if converted != expected:
-        raise Exception("TEST FAIL, expected vs actual: \n{}\n{}".format(expected, converted))
-    print "Test passed\n"
-
-
 if __name__ == '__main__':
-    if utils.OP_MODE == utils.OperatingMode.OLD_CHASE_CREDIT:
-        tests()
     main()

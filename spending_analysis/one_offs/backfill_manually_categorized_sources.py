@@ -20,8 +20,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 #pylint: disable=wrong-import-position
 import source_logic.spending_utils as utils
-import source_logic.load_manually_categorized_tx as load_manually_categorized_tx
-import source_logic.extract_old_chase_credit_tx as extract_old_chase_credit_tx
 import source_logic.extract_chase_checking_tx as extract_chase_checking_tx
 import source_logic.extract_schwab_checking_tx as extract_schwab_checking_tx
 import source_logic.extract_schwab_brokerage_tx as extract_schwab_brokerage_tx
@@ -32,7 +30,6 @@ if utils.OP_MODE == utils.OperatingMode.CHASE_CREDIT:
     raise Exception("Don't need to backfill chase credit, the old -> new conversion script took care of that")
 
 extraction_fn_by_mode = {
-    utils.OperatingMode.OLD_CHASE_CREDIT: extract_old_chase_credit_tx.convert_to_tx_format,
     utils.OperatingMode.CHASE_CHECKING: extract_chase_checking_tx.convert_to_tx_format,
     utils.OperatingMode.SCHWAB_CHECKING: extract_schwab_checking_tx.convert_to_tx_format,
     utils.OperatingMode.SCHWAB_BROKERAGE: extract_schwab_brokerage_tx.convert_to_tx_format,
@@ -64,11 +61,6 @@ old_manually_categorized_tx_lines = utils.load_from_file(old_filepath)
 if old_manually_categorized_tx_lines[0].count("\t") != 3:
     print old_manually_categorized_tx_lines[0].split("\t")
     raise Exception("Extracted line tab count is wrong, did you already backfill source?")
-
-# fix leading zeros issue for old format
-if utils.OP_MODE == utils.OperatingMode.OLD_CHASE_CREDIT:
-    old_manually_categorized_tx_lines = \
-        load_manually_categorized_tx.fix_gdocs_number_formatting(old_manually_categorized_tx_lines)
 
 new_manually_categorized_tx_lines = []
 
