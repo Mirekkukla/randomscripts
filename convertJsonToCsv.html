@@ -1,0 +1,68 @@
+<!-- Run a simple python server with root set to ~/Desktop:
+ $ cd Desktop
+ $ python -m SimpleHTTPServer 8083
+-->
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/json2csv"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<script>
+  $.getJSON("http://localhost:8083/production-223120-DriverLogs-export.json", (data) => {
+  console.log(data);
+
+  let entries = [];
+
+  for (let [jankDate, entry] of Object.entries(data)) {
+    let [month, day, year] = jankDate.split(' ');
+    let date = `${year}-${month}-${day}`;
+
+    let parseForPhone = (phoneType, userObj) => {
+      for (let [userId, requestObj] of Object.entries(userObj)) {
+          for (let [requestType, requestItem] of Object.entries(requestObj)) {
+            for (let [requestId, requestContents] of Object.entries(requestItem)) {
+                let action = '';
+                let body = requestContents.body;
+                if (body) {
+                    // For android the body is just the route, e.g. "https://rynlyproduction.azurewebsites.net/api/job/route"
+                    // For iOS it's a multi-line string with the request body, too.
+                    let pathFragments = body.split('\n')[0].split('/');
+                    action = pathFragments[pathFragments.length - 1];
+                    if (phoneType === 'iOS' && requestType === 'Request') {
+                      action = action.substring(0, action.length - 2);
+                    }
+                }
+
+                delete requestContents.TimeStamp;
+                delete requestContents.body;
+                requestContents.action = action;
+                requestContents.requestType = requestType;
+                requestContents.date = date;
+                requestContents.phoneType = phoneType;
+
+                entries.push(requestContents);
+            }
+          }
+      }
+    };
+
+    parseForPhone('android', entry.Android ?? {});
+    parseForPhone('iOS', entry.iOS ?? {});
+  }
+
+  console.log('Number of rows: ' + entries.length);
+
+  let parser = new json2csv.Parser({});
+  let csv = parser.parse(entries);
+  let blob = new Blob([csv], { type: 'text/csv' });
+
+  let a = document.createElement('a');
+  a.href = window.URL.createObjectURL(blob);
+  a.download = 'test.csv';
+  a.click();
+
+});
+</script>
+</body>
+</html>
